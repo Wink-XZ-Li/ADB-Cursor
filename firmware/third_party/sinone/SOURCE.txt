@@ -1,0 +1,7 @@
+Source: D:\C51\SOC\SC95F876x_C.H
+Vendor: Shenzhen SinOne Microelectronics Co., Ltd.
+File: SC95F876x_C.H
+Version: V1.0 (2022.01.20)
+SHA256: FE6BCA192C3D029BEE048647FB619207E9793A955D8654E3DFA3362825DC5BBC
+Use: official C51 SFR header for SC95F876x, including SC95F8763 unused-pin macro.
+Copied unmodified into this project. Not taken from any product firmware tree.

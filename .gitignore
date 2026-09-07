@@ -1,0 +1,17 @@
+*.obj
+*.lst
+*.LST
+*.OBJ
+*.M51
+*.lnp
+*.SBR
+*.bak
+*.uvgui.*
+*.build_log.htm
+Templst.soclst
+/build/
+/ADB-Cursor
+/docs/hardware-extract/*.png
+/docs/hardware-extract/*.txt
+__pycache__/
+.em_skill.json
