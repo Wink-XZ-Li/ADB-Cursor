@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>StageMinus1</OutputName>
+          <OutputName>Stage0</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -381,6 +381,11 @@
               <FileName>log_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\bsp\log_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>timebase.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\timebase.c</FilePath>
             </File>
           </Files>
         </Group>

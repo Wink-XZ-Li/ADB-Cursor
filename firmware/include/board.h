@@ -34,6 +34,5 @@
 void board_init(void);
 void board_wdt_feed(void);
 void board_heartbeat_toggle(void);
-void delay_ms_approx(unsigned int ms);
 
 #endif
