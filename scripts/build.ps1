@@ -44,7 +44,8 @@ Invoke-C51 "firmware\bsp\log_uart.c" "log_uart"
 Invoke-C51 "firmware\bsp\timebase.c" "timebase"
 Invoke-C51 "firmware\bsp\tm1640.c" "tm1640"
 Invoke-C51 "firmware\bsp\beep.c" "beep"
-Invoke-C51 "firmware\app\disp_test.c" "disp_test"
+Invoke-C51 "firmware\app\disp_ui.c" "disp_ui"
+Invoke-C51 "firmware\app\hmi.c" "hmi"
 Invoke-C51 "firmware\app\keys.c" "keys"
 Invoke-C51 "firmware\third_party\sense_lib\TKDriver.C" "TKDriver"
 
@@ -58,11 +59,12 @@ build\log_uart.obj,
 build\timebase.obj,
 build\tm1640.obj,
 build\beep.obj,
-build\disp_test.obj,
+build\disp_ui.obj,
+build\hmi.obj,
 build\keys.obj,
 build\TKDriver.obj,
 build\touch.lib
-TO build\Stage1B
+TO build\Stage1C
 CLASSES (CODE (C:0x0080-C:0xFFFF))
 "@ | Set-Content -LiteralPath $lnp -Encoding ascii
 
@@ -73,12 +75,12 @@ if ($LASTEXITCODE -gt 1) {
 }
 
 Write-Host "+ OHX51"
-& "$C51Bin\Ohx51.exe" "build\Stage1B" "HEXFILE(build\Stage1B.hex)"
+& "$C51Bin\Ohx51.exe" "build\Stage1C" "HEXFILE(build\Stage1C.hex)"
 Assert-LastExit "OHX51"
 
-$hex = Join-Path $Build "Stage1B.hex"
+$hex = Join-Path $Build "Stage1C.hex"
 $h = Get-FileHash -LiteralPath $hex -Algorithm SHA256
-Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage1B.hex") -Force
+Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage1C.hex") -Force
 Write-Host "HEX $hex"
 Write-Host "SHA256 $($h.Hash)"
 Write-Host "SIZE $((Get-Item -LiteralPath $hex).Length)"

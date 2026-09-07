@@ -1,19 +1,17 @@
 #include "board.h"
 #include "keys.h"
 #include "log_uart.h"
-#include "disp_test.h"
 #include "TKDriver.h"
 
-extern unsigned char data CurrentChannelMax;
+/* docs/key_map.md: power/fan/timer/mode/up/down */
+static unsigned char code s_tk[KEY_N] = {28, 23, 18, 10, 21, 8};
 
-static unsigned long s_prev;
-static unsigned int s_done;
+static unsigned long xdata s_now;
+static unsigned long xdata s_prev;
+static unsigned int xdata s_hold[KEY_N];
+static unsigned char xdata s_long[KEY_N];
+static unsigned char xdata s_evt[KEY_N];
 
-/*
- * Official SC95F TouchKey guide (T1): set each TK pin push-pull high
- * before TouchKeyInit. Do not drive CMOD (P0.7).
- * TK8=P1.0, TK10=P1.2, TK18=P2.2, TK21=P2.5, TK23=P2.7, TK28=P0.4.
- */
 static void keys_tk_gpio_init(void)
 {
     P0CON |= 0x10;
@@ -34,61 +32,106 @@ static void keys_tk_gpio_init(void)
 
 void keys_init(void)
 {
+    unsigned char i;
+
     keys_tk_gpio_init();
     IE1 |= 0x10;
     EA = 1;
     board_wdt_feed();
     TouchKeyInit();
     board_wdt_feed();
+    s_now = 0;
     s_prev = 0;
-    s_done = 0;
-    disp_show_u8(CurrentChannelMax);
+    for (i = 0; i < KEY_N; i++)
+    {
+        s_hold[i] = 0;
+        s_long[i] = 0;
+        s_evt[i] = KEY_EVT_NONE;
+    }
 }
 
-void keys_log_status(void)
+unsigned char keys_take_evt(unsigned char id)
 {
-    log_puts("TK st=");
-    log_u16((unsigned int)SOCAPI_TouchKeyStatus);
-    log_puts(" n=");
-    log_u16((unsigned int)CurrentChannelMax);
-    log_puts(" done=");
-    log_u16(s_done);
-    log_puts(" ie1=");
-    log_u16((unsigned int)IE1);
-    log_puts("\r\n");
+    unsigned char e;
+
+    e = s_evt[id];
+    s_evt[id] = KEY_EVT_NONE;
+    return e;
 }
 
 void keys_poll(void)
 {
-    unsigned long now;
     unsigned long rose;
+    unsigned char i;
+    unsigned char down;
     unsigned char ch;
 
-    if ((SOCAPI_TouchKeyStatus & 0x80) == 0)
+    if ((SOCAPI_TouchKeyStatus & 0x80) != 0)
     {
-        return;
-    }
-    SOCAPI_TouchKeyStatus &= 0x7F;
-
-    now = TouchKeyScan();
-    TouchKeyRestart();
-    s_done++;
-
-    rose = now & ~s_prev;
-    s_prev = now;
-    if (rose == 0)
-    {
-        return;
-    }
-
-    for (ch = 0; ch < 32; ch++)
-    {
-        if (((rose >> ch) & 1UL) != 0)
+        SOCAPI_TouchKeyStatus &= 0x7F;
+        s_now = TouchKeyScan();
+        TouchKeyRestart();
+        rose = s_now & ~s_prev;
+        s_prev = s_now;
+        if (rose != 0)
         {
-            log_puts("KEY tk=");
-            log_u16((unsigned int)ch);
-            log_puts("\r\n");
-            disp_show_u8(ch);
+            for (ch = 0; ch < 32; ch++)
+            {
+                if (((rose >> ch) & 1UL) != 0)
+                {
+                    log_puts("KEY tk=");
+                    log_u16((unsigned int)ch);
+                    log_puts("\r\n");
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < KEY_N; i++)
+    {
+        down = (unsigned char)((s_now >> s_tk[i]) & 1UL);
+        if (down != 0)
+        {
+            if (s_hold[i] < 60000U)
+            {
+                s_hold[i]++;
+            }
+            if (s_hold[i] == 1U)
+            {
+                if ((i == KEY_MODE) || (i == KEY_TIMER) || (i == KEY_UP) || (i == KEY_DOWN))
+                {
+                    s_evt[i] = KEY_EVT_CLICK;
+                }
+                if ((i == KEY_FAN) && (s_evt[i] == KEY_EVT_NONE))
+                {
+                    /* on-unit fan click is decided in HMI using power state;
+                     * send CLICK immediately; HMI ignores it when off. */
+                    s_evt[i] = KEY_EVT_CLICK;
+                }
+            }
+            if ((s_hold[i] == 3000U) && (s_long[i] == 0))
+            {
+                s_long[i] = 1;
+                if ((i == KEY_POWER) || (i == KEY_FAN))
+                {
+                    s_evt[i] = KEY_EVT_LONG;
+                }
+            }
+            if (((i == KEY_UP) || (i == KEY_DOWN)) &&
+                (s_hold[i] >= 400U) &&
+                (((s_hold[i] - 400U) % 200U) == 0))
+            {
+                s_evt[i] = KEY_EVT_REPEAT;
+            }
+        }
+        else
+        {
+            if ((i == KEY_POWER) && (s_hold[i] >= 40U))
+            {
+                s_evt[i] = KEY_EVT_CLICK;
+            }
+            s_hold[i] = 0;
+            s_long[i] = 0;
         }
     }
 }

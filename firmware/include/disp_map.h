@@ -30,5 +30,6 @@
 #define DISP_ICON_DRY    DISP_SEG4
 #define DISP_ICON_FAN    DISP_SEG7
 #define DISP_ICON_HEAT   DISP_SEG5
+#define DISP_ICON_TIMER  DISP_SEG4
 
 #endif

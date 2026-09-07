@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage1B</OutputName>
+          <OutputName>Stage1C</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -393,9 +393,14 @@
               <FilePath>.\firmware\bsp\tm1640.c</FilePath>
             </File>
             <File>
-              <FileName>disp_test.c</FileName>
+              <FileName>disp_ui.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\firmware\app\disp_test.c</FilePath>
+              <FilePath>.\firmware\app\disp_ui.c</FilePath>
+            </File>
+            <File>
+              <FileName>hmi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\hmi.c</FilePath>
             </File>
             <File>
               <FileName>keys.c</FileName>

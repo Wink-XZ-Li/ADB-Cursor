@@ -68,7 +68,7 @@ void tm1640_init(void)
     tm1640_blank();
 }
 
-void tm1640_display(unsigned char *buf)
+void tm1640_display_br(unsigned char *buf, unsigned char br)
 {
     unsigned char i;
 
@@ -85,8 +85,13 @@ void tm1640_display(unsigned char *buf)
     tm1640_stop();
 
     tm1640_start();
-    tm1640_write_byte(0x8F);
+    tm1640_write_byte(br);
     tm1640_stop();
+}
+
+void tm1640_display(unsigned char *buf)
+{
+    tm1640_display_br(buf, TM1640_BR_FULL);
 }
 
 void tm1640_blank(void)
