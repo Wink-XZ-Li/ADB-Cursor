@@ -30,6 +30,8 @@ static unsigned char xdata s_wifi_lamp;
 static unsigned char xdata s_flash_on;
 static unsigned char xdata s_suppress_pwr;
 static unsigned char xdata s_dirty;
+static unsigned char xdata s_pwr_lost;
+static unsigned char xdata s_pwr_fault;
 static unsigned int xdata s_idle_ms;
 static unsigned int xdata s_edit_ms;
 static unsigned int xdata s_view_ms;
@@ -336,13 +338,20 @@ static void hmi_draw(void)
     unsigned char num;
     unsigned char timer_lamp;
     unsigned char hours;
+    unsigned char overlay;
 
     show_num = 0;
     num = 0;
     timer_lamp = 0;
+    overlay = DISP_OV_NONE;
     if (s_timer_ms != 0)
     {
         timer_lamp = 1;
+    }
+
+    if ((s_power != 0) && (s_pwr_lost != 0))
+    {
+        overlay = DISP_OV_DASH;
     }
 
     if (s_edit != 0)
@@ -369,6 +378,17 @@ static void hmi_draw(void)
     {
         show_num = 1;
         num = s_sp;
+        if (s_pwr_lost == 0)
+        {
+            if (s_pwr_fault == 6U)
+            {
+                overlay = DISP_OV_E1;
+            }
+            else if (s_pwr_fault == 7U)
+            {
+                overlay = DISP_OV_E2;
+            }
+        }
     }
 
     disp_ui_draw(
@@ -380,7 +400,8 @@ static void hmi_draw(void)
         num,
         timer_lamp,
         s_wifi_lamp,
-        s_saver);
+        s_saver,
+        overlay);
 }
 
 void hmi_init(void)
@@ -408,6 +429,8 @@ void hmi_init(void)
     s_view_ms = 0;
     s_draw_ms = 0;
     s_dirty = 1;
+    s_pwr_lost = 0;
+    s_pwr_fault = 0;
     hmi_draw();
 }
 
@@ -435,7 +458,53 @@ void hmi_log_status(void)
     log_u16((unsigned int)s_wifi_on);
     log_puts(" sav=");
     log_u16((unsigned int)s_saver);
+    log_puts(" lost=");
+    log_u16((unsigned int)s_pwr_lost);
+    log_puts(" flt=");
+    log_u16((unsigned int)s_pwr_fault);
     log_puts("\r\n");
+}
+
+unsigned char hmi_power(void)
+{
+    return s_power;
+}
+
+unsigned char hmi_mode(void)
+{
+    return s_mode;
+}
+
+unsigned char hmi_fan(void)
+{
+    return s_fan;
+}
+
+unsigned char hmi_setpoint_c(void)
+{
+    if (s_unit_f != 0)
+    {
+        return f_to_c(s_sp);
+    }
+    return s_sp;
+}
+
+void hmi_set_pwr_lost(unsigned char lost)
+{
+    if (s_pwr_lost != lost)
+    {
+        s_pwr_lost = lost;
+        s_dirty = 1;
+    }
+}
+
+void hmi_set_pwr_fault(unsigned char fault)
+{
+    if (s_pwr_fault != fault)
+    {
+        s_pwr_fault = fault;
+        s_dirty = 1;
+    }
 }
 
 void hmi_poll(void)
@@ -487,7 +556,6 @@ void hmi_poll(void)
         {
             s_saver = 1;
             s_dirty = 1;
-            log_hmi_tag("HMI saver=1");
         }
     }
 
@@ -552,7 +620,6 @@ void hmi_poll(void)
             s_wifi_on = 0;
             s_wifi_lamp = 0;
             s_dirty = 1;
-            log_hmi_tag("HMI wifi=0");
         }
     }
 

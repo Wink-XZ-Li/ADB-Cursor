@@ -24,7 +24,7 @@
 | 内外机通信协议_260209-终.docx | 28084 | 阶段 2：已提取帧格式（`66 99` / `55 5A`、4800 8N1）。未读旧工程协议代码。 |
 | protocol_uforlynlgj5xx3zg_20260803.pdf | 146763 | 未读。阶段 4。 |
 | mcu_sdk_FOGATTI...20260803.zip | 55707 | 未读。阶段 4。 |
-| 红外遥控器协议.doc | 233472 | 未读。阶段 3。 |
+| 红外遥控器协议.doc | 233472 | 阶段 3 冻结：已提取载波 38 kHz、系统码 `0x56`、120 bit、A–N 字段。未读旧工程红外代码。 |
 
 ## 官方芯片与工具链
 
@@ -37,7 +37,7 @@
 | 数据手册 中文 | [SC95F8767_8766_8765_8763_8762v1.0cn](https://www.socmcu.com/upfile/SC95F8767_8766_8765_8763_8762v1.0cn.pdf)，SHA256 `647C0C15A00E9390BF237B2E8625A29EA1407CC8E8521A352430E70D5AAB40D0` | USCI0、WDT、封装 | 官方手册 |
 | 数据手册 英文 | [v0.1en](https://socmcu.com/upfile/SC95F8767_8766_8765_8763_8762v0.1en%20.pdf)，SHA256 `ED453C4ECF29AEFD9034A61BF6C977465212CA7F6067D51E76F32B93D551BD27` | 同上 | 官方手册 |
 | 应用指南 | 赛元 SC95F 系列 MCU 应用指南 V1.8 / V2.0（官网） | USCI TI/RI 写1清0、TX 上拉 | 只取 UART 注意项，未下载同类产品工程 |
-| 官方 Demo USCI0_Init.c | `D:\C51\SOC_KEIL_Setup\DEMO\SC95F8767_8766_8765_8763_128K_Demo_Code\C\USCI0_Init.c` | 核对 P0.5/P0.6 与 OTCON/US0CON 初始化顺序 | 未复制 Demo 工程或业务代码 |
+| 官方 Demo USCIX_Init.c | 同上 Demo 目录 | 阶段 2：USCI2 UART 的 P4.4/P4.5、`USXINX=2`、`TMCON|=0xC0`、`IE2|=0x02`、interrupt 16 | 未复制 Demo 工程或业务 |
 | SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 已登记，阶段 -1 不改 Option、不用其改芯片配置 | 官方烧录工具存在 |
 | 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` | 编译、烧录、串口。已检查：显式工程路径，不读取范围外工程 | 不引入旧产品代码 |
 

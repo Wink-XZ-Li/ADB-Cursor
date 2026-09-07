@@ -1,13 +1,11 @@
 #include "board.h"
 #include "keys.h"
-#include "log_uart.h"
 #include "TKDriver.h"
 
 /* docs/key_map.md: power/fan/timer/mode/up/down */
 static unsigned char code s_tk[KEY_N] = {28, 23, 18, 10, 21, 8};
 
 static unsigned long xdata s_now;
-static unsigned long xdata s_prev;
 static unsigned int xdata s_hold[KEY_N];
 static unsigned char xdata s_long[KEY_N];
 static unsigned char xdata s_evt[KEY_N];
@@ -41,7 +39,6 @@ void keys_init(void)
     TouchKeyInit();
     board_wdt_feed();
     s_now = 0;
-    s_prev = 0;
     for (i = 0; i < KEY_N; i++)
     {
         s_hold[i] = 0;
@@ -61,30 +58,14 @@ unsigned char keys_take_evt(unsigned char id)
 
 void keys_poll(void)
 {
-    unsigned long rose;
     unsigned char i;
     unsigned char down;
-    unsigned char ch;
 
     if ((SOCAPI_TouchKeyStatus & 0x80) != 0)
     {
         SOCAPI_TouchKeyStatus &= 0x7F;
         s_now = TouchKeyScan();
         TouchKeyRestart();
-        rose = s_now & ~s_prev;
-        s_prev = s_now;
-        if (rose != 0)
-        {
-            for (ch = 0; ch < 32; ch++)
-            {
-                if (((rose >> ch) & 1UL) != 0)
-                {
-                    log_puts("KEY tk=");
-                    log_u16((unsigned int)ch);
-                    log_puts("\r\n");
-                }
-            }
-        }
     }
 
     for (i = 0; i < KEY_N; i++)

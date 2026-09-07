@@ -6,6 +6,8 @@
 static unsigned char code s_n[10] = {
     0xFC, 0x60, 0xDA, 0xF2, 0x66, 0xB6, 0xBE, 0xE0, 0xFE, 0xF6
 };
+static unsigned char code s_e = 0x9E;
+static unsigned char code s_dash = 0x02;
 
 static void fill0(unsigned char *buf)
 {
@@ -36,7 +38,8 @@ void disp_ui_draw(
     unsigned char num,
     unsigned char timer_lamp,
     unsigned char wifi_lamp,
-    unsigned char dim)
+    unsigned char dim,
+    unsigned char overlay)
 {
     unsigned char buf[16];
     unsigned char t;
@@ -45,7 +48,22 @@ void disp_ui_draw(
 
     fill0(buf);
 
-    if ((show_num != 0) && (num < 100U))
+    if (overlay == DISP_OV_DASH)
+    {
+        light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, s_dash);
+        light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, s_dash);
+    }
+    else if (overlay == DISP_OV_E1)
+    {
+        light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, s_e);
+        light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, s_n[1]);
+    }
+    else if (overlay == DISP_OV_E2)
+    {
+        light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, s_e);
+        light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, s_n[2]);
+    }
+    else if ((show_num != 0) && (num < 100U))
     {
         t = (unsigned char)(num / 10U);
         o = (unsigned char)(num % 10U);

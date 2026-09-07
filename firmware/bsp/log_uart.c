@@ -76,6 +76,30 @@ void log_u16(unsigned int v)
     }
 }
 
+void log_hex8(unsigned char v)
+{
+    unsigned char n;
+
+    n = (unsigned char)(v >> 4);
+    if (n < 10U)
+    {
+        log_putc((unsigned char)('0' + n));
+    }
+    else
+    {
+        log_putc((unsigned char)('A' + n - 10U));
+    }
+    n = (unsigned char)(v & 0x0FU);
+    if (n < 10U)
+    {
+        log_putc((unsigned char)('0' + n));
+    }
+    else
+    {
+        log_putc((unsigned char)('A' + n - 10U));
+    }
+}
+
 void log_banner(unsigned int tick)
 {
     log_puts(FW_BANNER);

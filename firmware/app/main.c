@@ -5,6 +5,7 @@
 #include "beep.h"
 #include "keys.h"
 #include "hmi.h"
+#include "pwr_link.h"
 
 void board_wdt_feed(void)
 {
@@ -22,17 +23,13 @@ void board_init(void)
     beep_power_on();
     keys_init();
     hmi_init();
+    pwr_link_init();
     EA = 1;
     board_wdt_feed();
 }
 
 void main(void)
 {
-    unsigned int tick;
-    unsigned int ms;
-
-    tick = 0;
-    ms = 0;
     board_init();
     log_puts("\r\n");
     log_banner(0);
@@ -43,13 +40,6 @@ void main(void)
         delay_ms(1);
         keys_poll();
         hmi_poll();
-        ms++;
-        if (ms >= 500)
-        {
-            ms = 0;
-            tick++;
-            log_banner(tick);
-            hmi_log_status();
-        }
+        pwr_link_poll();
     }
 }

@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage1C</OutputName>
+          <OutputName>Stage2</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -411,6 +411,16 @@
               <FileName>beep.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\bsp\beep.c</FilePath>
+            </File>
+            <File>
+              <FileName>pwr_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\pwr_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>pwr_link.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\pwr_link.c</FilePath>
             </File>
             <File>
               <FileName>TKDriver.C</FileName>
