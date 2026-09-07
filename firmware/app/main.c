@@ -1,6 +1,7 @@
 #include "board.h"
 #include "log_uart.h"
 #include "timebase.h"
+#include "disp_test.h"
 
 void board_wdt_feed(void)
 {
@@ -22,6 +23,7 @@ void board_init(void)
 
     timebase_init();
     log_uart_init();
+    disp_test_init();
     board_wdt_feed();
 }
 
@@ -39,6 +41,7 @@ void main(void)
         tick++;
         board_heartbeat_toggle();
         log_banner(tick);
+        disp_test_step(tick);
         delay_ms(500);
         board_wdt_feed();
     }

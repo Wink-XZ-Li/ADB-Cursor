@@ -12,6 +12,7 @@
 ## 遵守
 
 - 未读取旧 ADB、test2、GL-ST-ADB、Boot/ApTest、历史对话、agent-transcripts。
+- 2026-09-07：用户要求按本仓库 `docs/led_segment_map.md` 纠正 GRID 扫描；只读该文件，未打开其提到的 GL-ST-ADB 工程。
 - 未用父目录搜索或子代理扩大范围。
 - 触摸库与 OTA skill 未读取。
 - 通用 skill 仅用显式本工程路径。

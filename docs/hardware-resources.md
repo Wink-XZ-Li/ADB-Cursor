@@ -9,6 +9,7 @@
 | 心跳 GPIO | P0.4 | 已引出且非三路 UART | 软件翻转；**未目视为 LED** |
 | 系统时钟 | 按 32 MHz 计算波特率 | 手册 IRC 档位 + 115200 可读 | **与 32 MHz 相符**；未读/未改 Option |
 | WDT | `WDTCON` bit4 CLRWDT | 手册；Option ENWDT 未改 | 循环中喂狗 |
-| 时基 | Timer0 模式 1，Fsys，1 ms 重装 | 手册 + 官方 Demo 公式 | 待 A0-03 实测 |
+| 时基 | Timer0 模式 1，Fsys，1 ms 重装 | 手册 + 官方 Demo 公式 | **已确认**（阶段 0） |
+| TM1640 | P3.1 SCLK / P3.0 DIN；显存按下标写入 | 8763 SOP28 脚 13/14 + TM1640 V1.5 + 1A 实板 | **已确认**。GRID/段码按 `docs/led_segment_map.md` |
 
 ORBEK 原理图无文字层，视觉识别互相矛盾，**不作为脚位冻结依据**。

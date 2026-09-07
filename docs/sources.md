@@ -43,6 +43,12 @@
 
 未使用：触摸 Sense_Lib、`sc95-ota-dual-zone` skill、涂鸦 SDK、旧 ADB / test2 / Boot 工程。
 
+## 人工技术提示（2026-09-07 14:40）
+
+用户反馈 `DISP grid=0..15` 不正常，并要求按本仓库 `docs/led_segment_map.md` 再对。
+随后要求测试改为：WiFi、模式循环（一次一灯）、风速循环（一次一灯）、数码管循环。
+未打开 GL-ST-ADB 或旧 ADB 源码核对 `DisplayChangeData`。
+
 ## 目录内已有文件（未删除）
 
 2026-09-07 11:34–11:36 出现的 Keil 空工程骨架：

@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage0</OutputName>
+          <OutputName>Stage1A</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -310,7 +310,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\firmware\include;.\firmware\bsp;.\firmware\third_party\sinone</IncludePath>
+              <IncludePath>.\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -386,6 +386,16 @@
               <FileName>timebase.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\bsp\timebase.c</FilePath>
+            </File>
+            <File>
+              <FileName>tm1640.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\tm1640.c</FilePath>
+            </File>
+            <File>
+              <FileName>disp_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\disp_test.c</FilePath>
             </File>
           </Files>
         </Group>
