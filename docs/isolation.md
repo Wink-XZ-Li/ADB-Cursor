@@ -14,7 +14,9 @@
 - 未读取旧 ADB、test2、GL-ST-ADB、Boot/ApTest、历史对话、agent-transcripts。
 - 2026-09-07：用户要求按本仓库 `docs/led_segment_map.md` 纠正 GRID 扫描；只读该文件，未打开其提到的 GL-ST-ADB 工程。
 - 未用父目录搜索或子代理扩大范围。
-- 触摸库与 OTA skill 未读取。
+- OTA skill 未读取。
+- 2026-09-07：读取赛元官网 TouchKey 应用指南（T1 调用顺序），未读旧工程触摸业务。
+- 2026-09-07 阶段 1B：按授权读取并复制 `D:\嵌入式项目文件夹\ADB\Sense_Lib` 下 4 个文件。未读取旧工程其余源码。
 - 通用 skill 仅用显式本工程路径。
 
 ## 提示词笔误与 ADB-Codex

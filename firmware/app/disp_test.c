@@ -115,3 +115,21 @@ void disp_test_step(unsigned int tick)
         s_step = 0;
     }
 }
+
+void disp_show_u8(unsigned char n)
+{
+    unsigned char buf[16];
+    unsigned char t;
+    unsigned char o;
+
+    fill0(buf);
+    t = (unsigned char)(n / 10U);
+    o = (unsigned char)(n % 10U);
+    if (t > 9)
+    {
+        t = 9;
+    }
+    light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, s_n[t]);
+    light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, s_n[o]);
+    tm1640_display(buf);
+}

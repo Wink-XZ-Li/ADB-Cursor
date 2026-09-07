@@ -14,7 +14,7 @@
         <TargetCommonOption>
           <Device>SC95F8763</Device>
           <Vendor>SC95Fxx Series</Vendor>
-          <Cpu>IRAM(0-0xFF) IROM(0-0xFFFF)  XRAM(0-0xFFF) CLOCK(32000000)</Cpu>
+          <Cpu>IRAM(0-0xFF) IROM(0-0xFFFF) XRAM(0-0x1FFF) CLOCK(32000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP.A51" ("Standard 8051 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage1A</OutputName>
+          <OutputName>Stage1B</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -166,7 +166,7 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>0</UseTargetDll>
+            <UseTargetDll>1</UseTargetDll>
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>0</UpdateFlashBeforeDebugging>
@@ -184,7 +184,7 @@
         </Utilities>
         <Target51>
           <Target51Misc>
-            <MemoryModel>0</MemoryModel>
+            <MemoryModel>2</MemoryModel>
             <RTOS>0</RTOS>
             <RomSize>2</RomSize>
             <DataHold>0</DataHold>
@@ -204,7 +204,7 @@
             <Mode2>0</Mode2>
             <useCB>0</useCB>
             <useXB>0</useXB>
-            <useL251>0</useL251>
+            <useL251>1</useL251>
             <useA251>0</useA251>
             <Mx51>0</Mx51>
             <ModC812>0</ModC812>
@@ -229,7 +229,7 @@
               <RCB>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x10000</Size>
+                <Size>0xffff</Size>
               </RCB>
               <RXB>
                 <Type>0</Type>
@@ -279,7 +279,7 @@
               <XRA>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x1000</Size>
+                <Size>0x2000</Size>
               </XRA>
               <XRA512>
                 <Type>0</Type>
@@ -307,10 +307,10 @@
             <ACallAJmp>0</ACallAJmp>
             <InterruptVectorAddress>0</InterruptVectorAddress>
             <VariousControls>
-              <MiscControls></MiscControls>
+              <MiscControls>OMF2 INTVECTOR(0)</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone</IncludePath>
+              <IncludePath>.\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone;.\firmware\third_party\sense_lib</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -339,7 +339,7 @@
             <Assign></Assign>
             <ReserveString></ReserveString>
             <CClasses></CClasses>
-            <UserClasses></UserClasses>
+            <UserClasses>CODE(C:0x80-C:0xFFFF)</UserClasses>
             <CSection></CSection>
             <UserSection></UserSection>
             <CodeBaseAddress></CodeBaseAddress>
@@ -396,6 +396,26 @@
               <FileName>disp_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\app\disp_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>keys.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\keys.c</FilePath>
+            </File>
+            <File>
+              <FileName>beep.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\beep.c</FilePath>
+            </File>
+            <File>
+              <FileName>TKDriver.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\third_party\sense_lib\TKDriver.C</FilePath>
+            </File>
+            <File>
+              <FileName>SC95F8X6X_HighSensitive.LIB</FileName>
+              <FileType>4</FileType>
+              <FilePath>.\firmware\third_party\sense_lib\SC95F8X6X_HighSensitive.LIB</FilePath>
             </File>
           </Files>
         </Group>

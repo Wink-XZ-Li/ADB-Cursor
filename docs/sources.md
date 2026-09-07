@@ -1,6 +1,6 @@
 # 资料来源与复用清单
 
-记录本次实际使用的输入。触摸库与 OTA skill 尚未读取。
+记录本次实际使用的输入。OTA skill 尚未读取。
 
 ## 本提示词与工程
 
@@ -41,7 +41,24 @@
 | SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 已登记，阶段 -1 不改 Option、不用其改芯片配置 | 官方烧录工具存在 |
 | 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` | 编译、烧录、串口。已检查：显式工程路径，不读取范围外工程 | 不引入旧产品代码 |
 
-未使用：触摸 Sense_Lib、`sc95-ota-dual-zone` skill、涂鸦 SDK、旧 ADB / test2 / Boot 工程。
+未使用：`sc95-ota-dual-zone` skill、涂鸦 SDK、旧 ADB 除 Sense_Lib 外的源码 / test2 / Boot 工程。
+
+## Sense_Lib 复制（阶段 1B，授权例外）
+
+来源目录：`D:\嵌入式项目文件夹\ADB\Sense_Lib`（仅该目录 4 个文件）。  
+副本：`firmware/third_party/sense_lib/`。未改内容。
+
+| 文件 | 字节 | SHA256 | 用途 |
+| --- | --- | --- | --- |
+| `SC95F8X6X_HighSensitive_lib_T1_L_V2.1.0.LIB` | 16210 | `F3DE0612C1B9E17073F1D10123A366D832E54C5F4E1EACD1B2B8683F7AA35B7D` | 赛元高灵敏触摸算法库（LARGE）。副本改名为 `SC95F8X6X_HighSensitive.LIB` 以便 LX51，内容未改。 |
+| `S_TouchKeyCFG.h` | 930 | `E33FF0D49217FA50865E29AB9EA07A80B43F36A3681E7A96D9A9195431088F82` | 6 通道触摸配置 |
+| `TKDriver.C` | 12752 | `F93516262912DC67740F284A50603997605A9B203D3C0BBD9D1279AF1035C875` | 官方扫描/中断封装 |
+| `TKDriver.h` | 1582 | `0D5E542DCC8CC61560775FF9CA1C3FF2CE12E7C3FC964F3931382DD2185C1F23` | 库接口 |
+
+通道掩码 `0x10A40500` → TK8/10/18/21/23/28（手册对应 P1.0、P1.2、P2.2、P2.5、P2.7、P0.4）。P0.4 不再作心跳 GPIO。  
+适配：`TKDriver.C` 中按键位判断不再使用 `PSW.CY`（LARGE 下 `>>` 走 `?C?ULSHR`，CY 不可靠）。链接把 CODE 放到 `0x80` 之后，避免 `main` 盖住 `0x005B` 触摸中断向量。  
+调用顺序按赛元 TouchKey 应用指南 T1：TK 脚先强推挽输出高，`EA=1` 后 `TouchKeyInit()`，每轮 `TouchKeyScan()` 后必须 `TouchKeyRestart()`。  
+未复制旧工程 HMI/按键名表；日志用 `KEY tk=N`。
 
 ## 人工技术提示（2026-09-07 14:40）
 
@@ -57,4 +74,4 @@
 - 构建日志：μVision 已汇编 STARTUP，缺 `main` 导致 `?C_START` 警告。
 - 无 Git。未继承任何仓库历史。
 
-处理：保留 STARTUP.A51 与现有调试器 DLL 配置；不覆盖该启动文件；仅改正器件名/头文件、打开 HEX、加入本阶段源文件。
+处理：保留 STARTUP.A51 与现有调试器 DLL 配置；不覆盖该启动文件；仅改正器件名/头文件、打开 HEX、加入本阶段源文件。阶段 1B 为 Sense_Lib 的 xdata，将 `XDATALEN` 改为 `2000H`（8 KB）。

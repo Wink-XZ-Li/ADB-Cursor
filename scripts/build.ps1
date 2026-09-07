@@ -30,41 +30,55 @@ Write-Host "+ A51 STARTUP.A51"
 & "$C51Bin\A51.exe" "STARTUP.A51" "DEBUG" "PRINT(build\STARTUP.lst)" "OBJECT(build\STARTUP.obj)"
 Assert-LastExit "A51"
 
-$inc = ".\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone"
+$inc = ".\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone;.\firmware\third_party\sense_lib"
+$c51model = "LARGE"
 
-Write-Host "+ C51 main.c"
-& "$C51Bin\C51.exe" "firmware\app\main.c" "SMALL" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\main.lst)" "OBJECT(build\main.obj)"
-Assert-LastExit "C51 main.c"
-
-Write-Host "+ C51 log_uart.c"
-& "$C51Bin\C51.exe" "firmware\bsp\log_uart.c" "SMALL" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\log_uart.lst)" "OBJECT(build\log_uart.obj)"
-Assert-LastExit "C51 log_uart.c"
-
-Write-Host "+ C51 timebase.c"
-& "$C51Bin\C51.exe" "firmware\bsp\timebase.c" "SMALL" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\timebase.lst)" "OBJECT(build\timebase.obj)"
-Assert-LastExit "C51 timebase.c"
-
-Write-Host "+ C51 tm1640.c"
-& "$C51Bin\C51.exe" "firmware\bsp\tm1640.c" "SMALL" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\tm1640.lst)" "OBJECT(build\tm1640.obj)"
-Assert-LastExit "C51 tm1640.c"
-
-Write-Host "+ C51 disp_test.c"
-& "$C51Bin\C51.exe" "firmware\app\disp_test.c" "SMALL" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\disp_test.lst)" "OBJECT(build\disp_test.obj)"
-Assert-LastExit "C51 disp_test.c"
-
-Write-Host "+ BL51"
-& "$C51Bin\BL51.exe" "build\STARTUP.obj,build\main.obj,build\log_uart.obj,build\timebase.obj,build\tm1640.obj,build\disp_test.obj" "TO" "build\Stage1A" "RAMSIZE(256)"
-if ($LASTEXITCODE -gt 1) {
-    throw "BL51 failed with exit $LASTEXITCODE"
+function Invoke-C51([string]$Src, [string]$Name) {
+    Write-Host "+ C51 $Src"
+    & "$C51Bin\C51.exe" $Src $c51model "OMF2" "INTVECTOR(0)" "DEBUG" "OBJECTEXTEND" "INCDIR($inc)" "OPTIMIZE(8,SIZE)" "PRINT(build\$Name.lst)" "OBJECT(build\$Name.obj)"
+    Assert-LastExit "C51 $Src"
 }
 
-Write-Host "+ OH51"
-& "$C51Bin\OH51.exe" "build\Stage1A" "HEXFILE(build\Stage1A.hex)"
-Assert-LastExit "OH51"
+Invoke-C51 "firmware\app\main.c" "main"
+Invoke-C51 "firmware\bsp\log_uart.c" "log_uart"
+Invoke-C51 "firmware\bsp\timebase.c" "timebase"
+Invoke-C51 "firmware\bsp\tm1640.c" "tm1640"
+Invoke-C51 "firmware\bsp\beep.c" "beep"
+Invoke-C51 "firmware\app\disp_test.c" "disp_test"
+Invoke-C51 "firmware\app\keys.c" "keys"
+Invoke-C51 "firmware\third_party\sense_lib\TKDriver.C" "TKDriver"
 
-$hex = Join-Path $Build "Stage1A.hex"
+Copy-Item -LiteralPath "firmware\third_party\sense_lib\SC95F8X6X_HighSensitive.LIB" -Destination (Join-Path $Build "touch.lib") -Force
+
+$lnp = Join-Path $Build "link.lnp"
+@"
+build\STARTUP.obj,
+build\main.obj,
+build\log_uart.obj,
+build\timebase.obj,
+build\tm1640.obj,
+build\beep.obj,
+build\disp_test.obj,
+build\keys.obj,
+build\TKDriver.obj,
+build\touch.lib
+TO build\Stage1B
+CLASSES (CODE (C:0x0080-C:0xFFFF))
+"@ | Set-Content -LiteralPath $lnp -Encoding ascii
+
+Write-Host "+ LX51"
+& "$C51Bin\LX51.exe" "@build\link.lnp"
+if ($LASTEXITCODE -gt 1) {
+    throw "LX51 failed with exit $LASTEXITCODE"
+}
+
+Write-Host "+ OHX51"
+& "$C51Bin\Ohx51.exe" "build\Stage1B" "HEXFILE(build\Stage1B.hex)"
+Assert-LastExit "OHX51"
+
+$hex = Join-Path $Build "Stage1B.hex"
 $h = Get-FileHash -LiteralPath $hex -Algorithm SHA256
-Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage1A.hex") -Force
+Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage1B.hex") -Force
 Write-Host "HEX $hex"
 Write-Host "SHA256 $($h.Hash)"
 Write-Host "SIZE $((Get-Item -LiteralPath $hex).Length)"

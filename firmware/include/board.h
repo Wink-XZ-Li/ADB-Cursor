@@ -23,16 +23,7 @@
 #define LOG_TX_PIN          P05
 #define LOG_RX_PIN          P06
 
-/*
- * GPIO heartbeat: SC95F8763 package does not bond P0.0-P0.3 (official header
- * SC95F8763_NIO_Init). Schematic PDF has no extractable text; vision OCR of
- * pin names disagreed. P0.4 is bonded and is not one of the three known UARTs.
- * Visible LED is not claimed until a pin is measured.
- */
-#define HEARTBEAT_PIN       P04
-
 void board_init(void);
 void board_wdt_feed(void);
-void board_heartbeat_toggle(void);
 
 #endif
