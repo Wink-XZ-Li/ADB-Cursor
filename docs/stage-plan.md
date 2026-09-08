@@ -14,8 +14,8 @@
 | **4** | 涂鸦 WiFi 与多入口一致 | 官方协议联调、三入口状态一致 | OTA / 掉电记忆。**已通过** `STAGE-4-0.1.3`（A2-06 仍搁置）。 |
 | **4C** | 掉电记忆 | 断电后来电恢复约定设定 | OTA / 改 Option。**已通过** `STAGE-4C-0.1.0`。 |
 | **4B** | MCU OTA | Boot 驻留 + DL→RUN；`releases\factory.hex` / `Stage4B.hex` / `Stage4B_ota.bin` | 真 A/B、LDROM Boot、读旧 Boot 源码。**已通过** `STAGE-4B-0.1.0`。 |
-| **5** | 资源、回归、交付 | 占用、回归记录、最终报告 | — |
+| **5** | 资源、回归、交付 | 占用、回归记录、`docs/delivery.md`、`docs/architecture/adb-runtime.html` | 新功能、A2-06、改固件。**已通过** `STAGE-5-0.1.0`。 |
 
-阶段 4 / 4C / 4B 已通过。下一阶段为 5（需你明确要求后再做）。A2-06 仍搁置。
+阶段 −1…5 已通过。本计划无阶段 6。A2-06 仍搁置。
 
 OTA 仅在 4B 定向读授权 skill。触摸仅在 1B 按例外复制 Sense_Lib。

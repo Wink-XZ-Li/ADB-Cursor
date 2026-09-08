@@ -31,6 +31,9 @@
 - 2026-09-08 10:28：用户「通过」，接受 `STAGE-4C-0.1.0`。未读 OTA skill。
 - 2026-09-08 阶段 4B：用户确认后读取授权 skill `sc95-ota-dual-zone` 及其 `reference.md`。**未打开、未读**旧工程 `SC95F8763_BootLoader` / `SC95F8763_Boot_ApTest` 源码。IAP 时序沿用本仓库已验收的 `eeprom.c`（`IAPKEY=0xF0`、`IAPCTL` 0x10/0x20 再 `| 0x02`），扩到 APROM（`IAPADE=0x00`）。涂鸦 `0x0A`/`0x0B` 按已复制 SDK 的 `system.c` 帧格式在 `tuya_link.c` 实现，**不编译**官方 `protocol.c`。Option 由你在 SOC Programming Tool 设置，固件不写 Option。
 - 2026-09-08 13:36：用户「阶段 4B 通过」，接受 `STAGE-4B-0.1.0`。SOC 工具改 Option 时 IRC 须保持 32 MHz。
+- 2026-09-08 阶段 5：用户「可以，开始阶段5」。只再编译本仓库、解析 `build\Boot.MAP` / `Stage4B.MAP`、汇总已有验收页、写 `docs/delivery.md`。不改固件行为，不重烧，不读旧工程。
+- 2026-09-08 阶段 5 架构图：本机无 `npx`，未装系统 Node。从 GitHub 浅克隆 `tt-a1i/archify`，用 Cursor 自带 Node 跑 `bin/archify.mjs`。未写入 `~\.cursor\skills`。未读旧工程。visual-check 使用本机 Edge。
+- 2026-09-08 14:16：用户「阶段 5 通过」，接受文档 `STAGE-5-0.1.0`。未改固件，未读旧工程。
 
 ## 提示词笔误与 ADB-Codex
 
