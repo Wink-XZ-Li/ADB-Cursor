@@ -14,7 +14,7 @@
 - 未读取旧 ADB、test2、GL-ST-ADB、Boot/ApTest、历史对话、agent-transcripts。
 - 2026-09-07：用户要求按本仓库 `docs/led_segment_map.md` 纠正 GRID 扫描；只读该文件，未打开其提到的 GL-ST-ADB 工程。
 - 未用父目录搜索或子代理扩大范围。
-- OTA skill 未读取。
+- 2026-09-08 阶段 4B：读取授权 `sc95-ota-dual-zone` skill + `reference.md`；未读旧 Boot 工程源码。
 - 2026-09-07：读取赛元官网 TouchKey 应用指南（T1 调用顺序），未读旧工程触摸业务。
 - 2026-09-07 阶段 1B：按授权读取并复制 `D:\嵌入式项目文件夹\ADB\Sense_Lib` 下 4 个文件。未读取旧工程其余源码。
 - 2026-09-07 阶段 2：只提取授权 `内外机通信协议_260209-终.docx` 正文，未读旧工程协议源码。
@@ -29,6 +29,8 @@
 - 2026-09-08 10:16：用户「阶段4通过」，接受 `STAGE-4-0.1.3`。掉电记忆未读旧工程，未读 OTA skill。
 - 2026-09-08 阶段 4C：独立 EEPROM 掉电记忆。IAP 读按官方 8763 Demo `IAP_Read`（`IAPADE=0x02`）；擦写按同系列 Demo `IAPKEY=0xF0`、`IAPCTL` 0x10/0x20 再 `| 0x02`。未复制缺失的 `IAP_Option_EW` 库，未写 APROM，未改 Option。
 - 2026-09-08 10:28：用户「通过」，接受 `STAGE-4C-0.1.0`。未读 OTA skill。
+- 2026-09-08 阶段 4B：用户确认后读取授权 skill `sc95-ota-dual-zone` 及其 `reference.md`。**未打开、未读**旧工程 `SC95F8763_BootLoader` / `SC95F8763_Boot_ApTest` 源码。IAP 时序沿用本仓库已验收的 `eeprom.c`（`IAPKEY=0xF0`、`IAPCTL` 0x10/0x20 再 `| 0x02`），扩到 APROM（`IAPADE=0x00`）。涂鸦 `0x0A`/`0x0B` 按已复制 SDK 的 `system.c` 帧格式在 `tuya_link.c` 实现，**不编译**官方 `protocol.c`。Option 由你在 SOC Programming Tool 设置，固件不写 Option。
+- 2026-09-08 13:36：用户「阶段 4B 通过」，接受 `STAGE-4B-0.1.0`。SOC 工具改 Option 时 IRC 须保持 32 MHz。
 
 ## 提示词笔误与 ADB-Codex
 

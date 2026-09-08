@@ -8,6 +8,7 @@ static unsigned char code s_n[10] = {
 };
 static unsigned char code s_e = 0x9E;
 static unsigned char code s_dash = 0x02;
+static unsigned char code s_spin[6] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04};
 
 static void fill0(unsigned char *buf)
 {
@@ -62,6 +63,16 @@ void disp_ui_draw(
     {
         light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, s_e);
         light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, s_n[2]);
+    }
+    else if (overlay == DISP_OV_SPIN)
+    {
+        t = s_spin[0];
+        if (num < 6U)
+        {
+            t = s_spin[num];
+        }
+        light_pair(buf, DISP_TM_TENS_0, DISP_TM_TENS_1, t);
+        light_pair(buf, DISP_TM_ONES_0, DISP_TM_ONES_1, t);
     }
     else if ((show_num != 0) && (num < 100U))
     {

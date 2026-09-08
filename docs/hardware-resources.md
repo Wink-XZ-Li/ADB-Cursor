@@ -7,9 +7,10 @@
 | WiFi UART | P2.1 TX / P2.0 RX，UART0，9600 8N1 | 提示词 + PcbDoc `TX_WIFI`/`RX_WIFI` + 官方 `Uart_Init.c` | **阶段 4**：Timer2 波特率，RX 中断 4；不抢红外 Timer1 |
 | WiFi 供电 | P2.6 拉低（`P_Wifi_Power`） | 用户确认 + PcbDoc | **阶段 4**：推挽输出 0，模块才有 3.3 V |
 | 掉电记忆 | 独立 EEPROM `IAPADE=0x02` 扇区 0 | 8763 手册 + 官方 IAP 时序；不改 Option | **阶段 4C** |
+| MCU OTA | APROM Boot `[0x0000,0x1000)` / RUN `[0x1000,0x8800)` / DL `[0x8800,0x10000)`；标志 EEPROM `0x0200` | 授权 skill；Option 由 SOC 工具设置 | **阶段 4B** |
 | 8763 未引出 | P0.0–P0.3、P1.4–P1.7、P3.4–P3.7、P4.6–P4.7、P5 | 官方头文件 `SC95F8763_NIO_Init` | 已按宏配置推挽 |
 | 心跳 GPIO | 曾用 P0.4 | 与 TK28 冲突 | **1B 起停用** |
-| 系统时钟 | 按 32 MHz 计算波特率 | 手册 IRC 档位 + 115200 可读 | **与 32 MHz 相符**；未读/未改 Option |
+| 系统时钟 | 按 32 MHz 计算波特率 | 手册 IRC 档位 + 115200 可读 | **与 32 MHz 相符**。4B 改 Option 时必须保持 32 MHz |
 | WDT | `WDTCON` bit4 CLRWDT | 手册；Option ENWDT 未改 | 循环中喂狗 |
 | 时基 | Timer0 模式 1，Fsys，1 ms 重装 | 手册 + 官方 Demo 公式 | **已确认**（阶段 0） |
 | TM1640 | P3.1 SCLK / P3.0 DIN | 1A 实板 | **已确认** |

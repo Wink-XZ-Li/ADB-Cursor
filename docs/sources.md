@@ -1,6 +1,6 @@
 # 资料来源与复用清单
 
-记录本次实际使用的输入。OTA skill 尚未读取。
+记录本次实际使用的输入。阶段 4B 已读授权 OTA skill，未读旧 Boot 源码。
 
 ## 本提示词与工程
 
@@ -41,10 +41,10 @@
 | 官方 Demo USCIX_Init.c | 同上 Demo 目录 | 阶段 2：USCI2 UART 的 P4.4/P4.5、`USXINX=2`、`TMCON|=0xC0`、`IE2|=0x02`、interrupt 16 | 未复制 Demo 工程或业务 |
 | 官方 Demo ADC_Init.c | 8763 Demo | 阶段 3：`ADCCON`/`ADCCFG`/`ADCVH`/`ADCVL`、启动位与 12 位拼法 | 轮询 EOC，不使能中断 6；未复制平均/中断业务 |
 | 用户粘贴 10K NTC 表 | 对话 2026-09-08 | `c_AD_TO_TEMPER_10K_TABLE` 下标 0–72℃ | 未打开旧工程取表；0.1.3 按 `adc>>4` 查 |
-| SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 已登记，阶段 -1 不改 Option、不用其改芯片配置 | 官方烧录工具存在 |
-| 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` | 编译、烧录、串口。已检查：显式工程路径，不读取范围外工程 | 不引入旧产品代码 |
+| SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 阶段 4B：你用它改 Option 并烧 `releases\factory.hex` | 官方烧录工具 |
+| 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` / `sc95-ota-dual-zone` | 编译、烧录、串口、4B OTA 地图与状态机 | 不引入旧产品代码；OTA skill 未打开对照工程 |
 
-未使用：`sc95-ota-dual-zone` skill、旧 ADB 除 Sense_Lib 外的源码 / test2 / Boot 工程。涂鸦只用来自授权 zip 的 MCU_SDK 头文件与 DP/PID，未读旧工程 `protocol.c`。
+未使用：旧 ADB 除 Sense_Lib 外的源码 / test2 / Boot 工程源码。涂鸦只用来自授权 zip 的 MCU_SDK 头文件与 DP/PID 及 `system.c` 的 `0x0A`/`0x0B` 帧格式说明，不编译官方 `protocol.c`。
 
 ## Sense_Lib 复制（阶段 1B，授权例外）
 

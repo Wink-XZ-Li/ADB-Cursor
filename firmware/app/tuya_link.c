@@ -4,6 +4,7 @@
 #include "hmi.h"
 #include "ntc.h"
 #include "log_uart.h"
+#include "ota_dl.h"
 
 /*
  * Official Tuya UART (copied MCU_SDK v2.6.2 headers): 55 AA, PID
@@ -26,6 +27,8 @@
 #define CMD_DP_DOWN    6
 #define CMD_DP_UP      7
 #define CMD_QUERY      8
+#define CMD_OTA_START  0x0A
+#define CMD_OTA_TRANS  0x0B
 
 #define DP_SWITCH      1
 #define DP_TEMP_SET    2
@@ -54,7 +57,7 @@
 #define ST_DATA        6
 #define ST_CS          7
 
-#define DATA_MAX       32
+#define DATA_MAX       260
 
 #define WIFI_SMART     0x00
 #define WIFI_AP        0x01
@@ -65,7 +68,7 @@
 #define WIFI_SMART_AP  0x06
 #define WIFI_UNKNOWN   0xFF
 
-static char code s_prod[] = "{\"p\":\"uforlynlgj5xx3zg\",\"v\":\"1.0.0\",\"m\":2}";
+static char code s_prod[] = "{\"p\":\"uforlynlgj5xx3zg\",\"v\":\"1.2.13\",\"m\":2}";
 
 static unsigned char xdata s_data[DATA_MAX];
 static unsigned char xdata s_tx[16];
@@ -85,6 +88,8 @@ static unsigned char xdata s_rst_n;
 static unsigned int xdata s_rst_ms;
 static unsigned int xdata s_norx_ms;
 static unsigned char xdata s_tx_fail;
+static unsigned long xdata s_firm_len;
+static unsigned char xdata s_ota_on;
 
 static unsigned char send_byte(unsigned char b)
 {
@@ -378,11 +383,69 @@ static void handle_frame(void)
     }
     else if (s_cmd == CMD_DP_DOWN)
     {
-        handle_dp_down();
+        if (s_ota_on == 0)
+        {
+            handle_dp_down();
+        }
     }
     else if (s_cmd == CMD_QUERY)
     {
-        report_all();
+        if (s_ota_on == 0)
+        {
+            report_all();
+        }
+    }
+    else if (s_cmd == CMD_OTA_START)
+    {
+        unsigned long n;
+        unsigned char psz;
+
+        if (s_len < 4U)
+        {
+            return;
+        }
+        n = ((unsigned long)s_data[0] << 24);
+        n |= ((unsigned long)s_data[1] << 16);
+        n |= ((unsigned long)s_data[2] << 8);
+        n |= (unsigned long)s_data[3];
+        s_firm_len = n;
+        s_ota_on = ota_begin(n);
+        psz = 0;
+        send_frame(CMD_OTA_START, &psz, 1);
+    }
+    else if (s_cmd == CMD_OTA_TRANS)
+    {
+        unsigned long pos;
+        unsigned int chunk;
+        unsigned char ok;
+
+        if (s_ota_on == 0)
+        {
+            return;
+        }
+        if (s_len < 4U)
+        {
+            return;
+        }
+        pos = ((unsigned long)s_data[0] << 24);
+        pos |= ((unsigned long)s_data[1] << 16);
+        pos |= ((unsigned long)s_data[2] << 8);
+        pos |= (unsigned long)s_data[3];
+        if ((s_len == 4U) && (pos == s_firm_len))
+        {
+            ok = ota_finish(s_firm_len);
+            if (ok != 0)
+            {
+                send_frame(CMD_OTA_TRANS, s_data, 0);
+            }
+            return;
+        }
+        chunk = (unsigned int)(s_len - 4U);
+        ok = ota_write(pos, &s_data[4], chunk);
+        if (ok != 0)
+        {
+            send_frame(CMD_OTA_TRANS, s_data, 0);
+        }
     }
 }
 
@@ -484,6 +547,8 @@ void tuya_link_init(void)
     s_rst_n = 0;
     s_rst_ms = 0;
     s_norx_ms = 0;
+    s_firm_len = 0;
+    s_ota_on = 0;
 }
 
 void tuya_link_reset_wifi(void)
@@ -554,7 +619,11 @@ void tuya_link_poll(void)
         }
     }
 
-    rpt = hmi_wifi_take_rpt();
+    rpt = 0;
+    if (ota_busy() == 0)
+    {
+        rpt = hmi_wifi_take_rpt();
+    }
     if ((rpt & HMI_RPT_FULL) != 0)
     {
         report_all();

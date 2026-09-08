@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage4C</OutputName>
+          <OutputName>Stage4B</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -305,9 +305,9 @@
             <SizeSpeed>1</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
             <ACallAJmp>0</ACallAJmp>
-            <InterruptVectorAddress>0</InterruptVectorAddress>
+            <InterruptVectorAddress>0x1000</InterruptVectorAddress>
             <VariousControls>
-              <MiscControls>OMF2 INTVECTOR(0)</MiscControls>
+              <MiscControls>OMF2 INTVECTOR(0x1000)</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
               <IncludePath>.\firmware\include;.\firmware\bsp;.\firmware\app;.\firmware\third_party\sinone;.\firmware\third_party\sense_lib</IncludePath>
@@ -339,7 +339,7 @@
             <Assign></Assign>
             <ReserveString></ReserveString>
             <CClasses></CClasses>
-            <UserClasses>CODE(C:0x80-C:0xFFFF)</UserClasses>
+            <UserClasses>CODE(C:0x1080-C:0x87EF), CONST(C:0x1080-C:0x87EF)</UserClasses>
             <CSection></CSection>
             <UserSection></UserSection>
             <CodeBaseAddress></CodeBaseAddress>
@@ -456,6 +456,16 @@
               <FileName>nvm.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\app\nvm.c</FilePath>
+            </File>
+            <File>
+              <FileName>iap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\iap.c</FilePath>
+            </File>
+            <File>
+              <FileName>ota_dl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\ota_dl.c</FilePath>
             </File>
             <File>
               <FileName>TKDriver.C</FileName>

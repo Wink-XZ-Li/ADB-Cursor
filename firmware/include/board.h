@@ -7,8 +7,10 @@
 
 /*
  * Clock is taken from the Keil device CLOCK(32000000) field and the official
- * SC95F876x datasheet internal IRC options (32/16/8/4 MHz). Code Option is
- * not modified. If Option is not 32 MHz, log baud will be wrong.
+ * SC95F876x datasheet internal IRC options (32/16/8/4 MHz). Stage 4B Option
+ * (Start=APROM, LDSIZE=0, IAP=Code:ALL) is set in SOC Programming Tool; this
+ * firmware does not write Option bytes. If IRC is not 32 MHz, log baud will
+ * be wrong.
  */
 #define SYSCLK_HZ           32000000UL
 #define SYSCLK_MHZ          32U

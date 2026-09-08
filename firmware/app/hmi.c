@@ -39,6 +39,9 @@ static unsigned char xdata s_last_amb;
 static unsigned char xdata s_sleep;
 static unsigned char xdata s_on_min;
 static unsigned char xdata s_wifi_rpt;
+static unsigned char xdata s_ota;
+static unsigned char xdata s_spin;
+static unsigned int xdata s_spin_ms;
 static unsigned int xdata s_show_set_ms;
 static unsigned int xdata s_edit_ms;
 static unsigned int xdata s_view_ms;
@@ -402,6 +405,12 @@ static void hmi_draw(void)
     unsigned char saver_draw;
     unsigned char ov_scr;
 
+    if (s_ota != 0)
+    {
+        disp_ui_draw(0, 0, 0, 0, 0, s_spin, 0, 0, 0, DISP_OV_SPIN);
+        return;
+    }
+
     show_num = 0;
     num = 0;
     timer_lamp = 0;
@@ -577,6 +586,9 @@ void hmi_init(void)
     s_on_min = 0;
     s_usage_ms = 0;
     s_wifi_rpt = 0;
+    s_ota = 0;
+    s_spin = 0;
+    s_spin_ms = 0;
     apply_nvm();
     hmi_draw();
 }
@@ -917,6 +929,23 @@ void hmi_set_pwr_fault(unsigned char fault)
     }
 }
 
+void hmi_set_ota(unsigned char on)
+{
+    s_ota = (unsigned char)((on != 0) ? 1 : 0);
+    s_spin = 0;
+    s_spin_ms = 0;
+    s_dirty = 1;
+    if (s_ota != 0)
+    {
+        hmi_draw();
+    }
+}
+
+unsigned char hmi_ota_busy(void)
+{
+    return s_ota;
+}
+
 void hmi_apply_ir(unsigned char power, unsigned char mode_ok, unsigned char mode,
                   unsigned char fan, unsigned char set_c, unsigned char f_plus,
                   unsigned char unit_f, unsigned char tmr_op, unsigned char tmr_hours,
@@ -927,6 +956,11 @@ void hmi_apply_ir(unsigned char power, unsigned char mode_ok, unsigned char mode
     unsigned char old_sp;
     unsigned char old_unit;
     unsigned char saver;
+
+    if (s_ota != 0)
+    {
+        return;
+    }
 
     s_edit = 0;
     s_view = 0;
@@ -1076,6 +1110,29 @@ void hmi_poll(void)
     unsigned char e;
     unsigned char st;
     unsigned int blink;
+
+    if (s_ota != 0)
+    {
+        s_spin_ms++;
+        if (s_spin_ms >= 100U)
+        {
+            s_spin_ms = 0;
+            s_spin++;
+            if (s_spin >= 6U)
+            {
+                s_spin = 0;
+            }
+            s_dirty = 1;
+        }
+        s_draw_ms++;
+        if ((s_dirty != 0) || (s_draw_ms >= 50U))
+        {
+            s_draw_ms = 0;
+            s_dirty = 0;
+            hmi_draw();
+        }
+        return;
+    }
 
     for (i = 0; i < KEY_N; i++)
     {

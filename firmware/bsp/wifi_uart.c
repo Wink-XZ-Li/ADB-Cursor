@@ -9,12 +9,12 @@
  * RX: interrupt 4 plus poll (same reason power UART dropped IRQ).
  */
 
-#define RX_N           64U
+#define RX_N           512U
 #define T0_RELOAD_1MS  ((unsigned int)(65536U - 32000U))
 
 static unsigned char xdata s_rx[RX_N];
-static unsigned char data s_in;
-static unsigned char data s_out;
+static unsigned int data s_in;
+static unsigned int data s_out;
 static unsigned char data s_ready;
 
 static void baud_arm(void)
@@ -52,9 +52,9 @@ void wifi_uart_pins(void)
 
 static void rx_push(unsigned char b)
 {
-    unsigned char n;
+    unsigned int n;
 
-    n = (unsigned char)((s_in + 1U) & (unsigned char)(RX_N - 1U));
+    n = (unsigned int)((s_in + 1U) & (RX_N - 1U));
     if (n != s_out)
     {
         s_rx[s_in] = b;
@@ -124,15 +124,20 @@ void wifi_uart_init(void)
 
 void wifi_uart_poll_rx(void)
 {
+    unsigned char ea;
+
     if (s_ready == 0)
     {
         return;
     }
+    ea = EA;
+    EA = 0;
     if (RI)
     {
         RI = 0;
         rx_push(SBUF);
     }
+    EA = ea;
 }
 
 unsigned char wifi_uart_putc(unsigned char c)
@@ -160,12 +165,18 @@ unsigned char wifi_uart_putc(unsigned char c)
 
 unsigned char wifi_uart_rx_take(unsigned char *c)
 {
+    unsigned char ea;
+
+    ea = EA;
+    EA = 0;
     if (s_in == s_out)
     {
+        EA = ea;
         return 0;
     }
     *c = s_rx[s_out];
-    s_out = (unsigned char)((s_out + 1U) & (unsigned char)(RX_N - 1U));
+    s_out = (unsigned int)((s_out + 1U) & (RX_N - 1U));
+    EA = ea;
     return 1;
 }
 

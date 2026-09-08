@@ -1,6 +1,6 @@
 # 需求、决策与阶段状态
 
-状态日期：2026-09-08。阶段 4 与 4C 已通过（A2-06 失联搁置）。OTA 仍等 4B。
+状态日期：2026-09-08。阶段 4、4C、4B 已通过（A2-06 失联搁置）。下一阶段为 5，需你明确要求后再做。
 
 ## 阶段状态
 
@@ -15,6 +15,7 @@
 | 3 红外与其余本地 | **已通过**（08:59） | `STAGE-3-0.1.3`，见 `docs/acceptance/stage-3.md` |
 | 4 涂鸦 WiFi | **已通过**（10:16） | `STAGE-4-0.1.3`，见 `docs/acceptance/stage-4.md` |
 | 4C 掉电记忆 | **已通过**（10:28） | `STAGE-4C-0.1.0`，见 `docs/acceptance/stage-4c.md` |
+| 4B MCU OTA | **已通过**（13:36） | `STAGE-4B-0.1.0`，见 `docs/acceptance/stage-4b.md` |
 
 ## 需求清单（当前与已知）
 
@@ -30,7 +31,8 @@
 | R-SYS-01 | 触摸必须用授权 Sense_Lib | 提示词 | 阶段 1B | **已通过** `STAGE-1B-0.1.2` |
 | R-SYS-02 | 涂鸦用官方 SDK | 提示词 | 阶段 4 | **已通过** `STAGE-4-0.1.3` |
 | R-MEM-01 | 掉电记忆 | 规格「断电前记忆」 | 阶段 4C | **已通过** `STAGE-4C-0.1.0` |
-| R-SYS-03 | 不擅自改 Option / 烧录器配置 | 提示词 | 本阶段未改 | 遵守中 |
+| R-SYS-03 | Option 由人在 SOC 工具改，固件不写 Option | 提示词 + 4B 决策 | 4B 工厂烧录 | **已通过**：Start=APROM，LDSIZE=0，IAP=Code:ALL，IRC=32 MHz |
+| R-OTA-01 | MCU OTA Boot 驻留 + DL→RUN | 授权 skill + 规格 6.3.2 | 阶段 4B | **已通过** `STAGE-4B-0.1.0` |
 
 ## 分类
 

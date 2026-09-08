@@ -101,6 +101,12 @@ void ir_link_poll(void)
     unsigned char sleep;
     unsigned char disp_on;
 
+    if (hmi_ota_busy() != 0)
+    {
+        ir_rx_take(s_buf);
+        return;
+    }
+
     if (ir_rx_take(s_buf) == 0)
     {
         return;
