@@ -18,13 +18,15 @@
 
 #define PWR_UART_BAUD       4800UL
 #define PWR_BAUD_DIV        ((unsigned int)(SYSCLK_HZ / PWR_UART_BAUD))
+#define WIFI_UART_BAUD      9600UL
 
 /*
  * DispUart: user constraint + datasheet USCI0 USTX0/USRX0 on P0.5/P0.6.
  * Power-board UART: P4.4 TX / P4.5 RX, USCI2, 4800 8N1.
  * IR: SOP28 pin 12 = P3.2 (PcbDoc net P_REC / REC1 WH1738). P3.2 has no
  * INT0/1/2, so Timer1 samples it. NTC: SOP28 pin 22 = P2.3 / AIN7
- * (PcbDoc net AD_NTC). WiFi UART P2.1/P2.0 is not initialized.
+ * (PcbDoc net AD_NTC). WiFi: P2.1 TX / P2.0 RX = UART0 + Timer2 @ 9600.
+ * Module supply: P2.6 low (PcbDoc P_Wifi_Power; user: pull low to power).
  */
 #define LOG_TX_PIN          P05
 #define LOG_RX_PIN          P06
@@ -32,6 +34,9 @@
 #define PWR_RX_PIN          P45
 #define IR_PIN              P32
 #define NTC_PIN             P23
+#define WIFI_TX_PIN         P21
+#define WIFI_RX_PIN         P20
+#define WIFI_PWR_PIN        P26
 
 void board_init(void);
 void board_wdt_feed(void);

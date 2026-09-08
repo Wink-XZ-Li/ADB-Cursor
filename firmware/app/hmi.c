@@ -4,6 +4,8 @@
 #include "disp_ui.h"
 #include "log_uart.h"
 #include "ntc.h"
+#include "tuya_link.h"
+#include "nvm.h"
 
 #define MODE_COOL  0
 #define MODE_DRY   1
@@ -26,14 +28,17 @@ static unsigned char xdata s_edit;
 static unsigned char xdata s_view;
 static unsigned char xdata s_edit_val;
 static unsigned char xdata s_timer_off;
-static unsigned char xdata s_wifi_on;
 static unsigned char xdata s_wifi_lamp;
+static unsigned char xdata s_wifi_st;
 static unsigned char xdata s_flash_on;
 static unsigned char xdata s_suppress_pwr;
 static unsigned char xdata s_dirty;
 static unsigned char xdata s_pwr_lost;
 static unsigned char xdata s_pwr_fault;
 static unsigned char xdata s_last_amb;
+static unsigned char xdata s_sleep;
+static unsigned char xdata s_on_min;
+static unsigned char xdata s_wifi_rpt;
 static unsigned int xdata s_show_set_ms;
 static unsigned int xdata s_edit_ms;
 static unsigned int xdata s_view_ms;
@@ -41,7 +46,9 @@ static unsigned int xdata s_flash_ms;
 static unsigned int xdata s_wifi_blink_ms;
 static unsigned int xdata s_draw_ms;
 static unsigned long xdata s_timer_ms;
-static unsigned long xdata s_wifi_ms;
+static unsigned long xdata s_on_ms;
+static unsigned long xdata s_usage_ms;
+static nvm_rec_t xdata s_nvm;
 static unsigned char code s_fan_next[4] = {FAN_MED, FAN_HIGH, FAN_TURBO, FAN_LOW};
 static unsigned char code s_mode_next[4] = {MODE_DRY, MODE_FAN, MODE_COOL, MODE_HEAT};
 
@@ -105,12 +112,27 @@ static unsigned char amb_display(void)
     return (unsigned char)f;
 }
 
+static void mark_rpt(unsigned char bits)
+{
+    s_wifi_rpt = (unsigned char)(s_wifi_rpt | bits);
+}
+
+static void reset_usage(void)
+{
+    s_on_ms = 0;
+    s_on_min = 0;
+    s_usage_ms = 0;
+    mark_rpt(HMI_RPT_USAGE);
+}
+
 static void hmi_wake(void)
 {
     if (s_saver != 0)
     {
         s_saver = 0;
         s_dirty = 1;
+        mark_rpt(HMI_RPT_FULL);
+        log_puts("HMI scr=0\r\n");
     }
 }
 
@@ -135,6 +157,7 @@ static void set_power(unsigned char on)
     s_view = 0;
     s_saver = 0;
     s_show_set_ms = 0;
+    reset_usage();
     if (on != 0)
     {
         apply_dry_fan();
@@ -145,6 +168,7 @@ static void set_power(unsigned char on)
         log_hmi_tag("HMI pwr=0");
     }
     s_dirty = 1;
+    mark_rpt(HMI_RPT_FULL);
 }
 
 static void adj_temp(unsigned char up)
@@ -189,6 +213,7 @@ static void adj_temp(unsigned char up)
         log_puts("C\r\n");
     }
     peek_setpoint();
+    mark_rpt(HMI_RPT_FULL);
 }
 
 static void adj_hours(unsigned char up)
@@ -223,6 +248,7 @@ static void confirm_timer(void)
     s_edit = 0;
     s_view = 0;
     s_dirty = 1;
+    mark_rpt(HMI_RPT_FULL);
 }
 
 static void handle_power(unsigned char evt)
@@ -231,10 +257,7 @@ static void handle_power(unsigned char evt)
     {
         if (s_power == 0)
         {
-            s_wifi_on = 1;
-            s_wifi_ms = 180000UL;
-            s_wifi_blink_ms = 0;
-            s_wifi_lamp = 1;
+            tuya_link_reset_wifi();
             s_suppress_pwr = 1;
             log_hmi_tag("HMI wifi");
             s_dirty = 1;
@@ -281,6 +304,7 @@ static void handle_fan(unsigned char evt)
                 log_hmi_tag("HMI unit=F");
             }
             s_dirty = 1;
+            mark_rpt(HMI_RPT_FULL);
         }
         return;
     }
@@ -294,6 +318,7 @@ static void handle_fan(unsigned char evt)
     log_u16((unsigned int)s_fan);
     log_puts("\r\n");
     s_dirty = 1;
+    mark_rpt(HMI_RPT_FULL);
 }
 
 static void handle_mode(void)
@@ -319,6 +344,7 @@ static void handle_mode(void)
     log_u16((unsigned int)s_mode);
     log_puts("\r\n");
     s_dirty = 1;
+    mark_rpt(HMI_RPT_FULL);
 }
 
 static void handle_timer(void)
@@ -373,11 +399,14 @@ static void hmi_draw(void)
     unsigned char timer_lamp;
     unsigned char hours;
     unsigned char overlay;
+    unsigned char saver_draw;
+    unsigned char ov_scr;
 
     show_num = 0;
     num = 0;
     timer_lamp = 0;
     overlay = DISP_OV_NONE;
+    ov_scr = 0;
     if (s_timer_ms != 0)
     {
         timer_lamp = 1;
@@ -441,17 +470,79 @@ static void hmi_draw(void)
         }
     }
 
+    if ((s_edit != 0) || (s_view != 0))
+    {
+        ov_scr = 1;
+    }
+    if ((overlay == DISP_OV_E1) || (overlay == DISP_OV_E2) || (overlay == DISP_OV_DASH))
+    {
+        ov_scr = 1;
+    }
+    saver_draw = s_saver;
+    if (ov_scr != 0)
+    {
+        saver_draw = 0;
+    }
+    else if (s_saver != 0)
+    {
+        show_num = 0;
+    }
+
     disp_ui_draw(
         s_power,
-        s_saver,
+        saver_draw,
         s_mode,
         s_fan,
         show_num,
         num,
         timer_lamp,
         s_wifi_lamp,
-        s_saver,
+        saver_draw,
         overlay);
+}
+
+static void fill_nvm(void)
+{
+    s_nvm.power = (unsigned char)((s_power != 0) ? 1 : 0);
+    s_nvm.mode = s_mode;
+    s_nvm.fan = s_fan;
+    s_nvm.fan_saved = s_fan_saved;
+    s_nvm.unit_f = (unsigned char)((s_unit_f != 0) ? 1 : 0);
+    s_nvm.sp = s_sp;
+    s_nvm.sleep = (unsigned char)((s_sleep != 0) ? 1 : 0);
+    s_nvm.saver = (unsigned char)((s_saver != 0) ? 1 : 0);
+}
+
+static void apply_nvm(void)
+{
+    if (nvm_load(&s_nvm) == 0)
+    {
+        log_puts("MEM miss\r\n");
+        fill_nvm();
+        nvm_capture(&s_nvm);
+        return;
+    }
+    s_power = s_nvm.power;
+    s_mode = s_nvm.mode;
+    s_fan = s_nvm.fan;
+    s_fan_saved = s_nvm.fan_saved;
+    s_unit_f = s_nvm.unit_f;
+    s_sp = s_nvm.sp;
+    s_sleep = s_nvm.sleep;
+    s_saver = s_nvm.saver;
+    apply_dry_fan();
+    mark_rpt(HMI_RPT_FULL);
+    log_puts("MEM ok p=");
+    log_u16((unsigned int)s_power);
+    log_puts(" m=");
+    log_u16((unsigned int)s_mode);
+    log_puts(" f=");
+    log_u16((unsigned int)s_fan);
+    log_puts(" ts=");
+    log_u16((unsigned int)s_sp);
+    log_puts("\r\n");
+    fill_nvm();
+    nvm_capture(&s_nvm);
 }
 
 void hmi_init(void)
@@ -467,10 +558,9 @@ void hmi_init(void)
     s_view = 0;
     s_timer_ms = 0;
     s_timer_off = 0;
-    s_wifi_on = 1;
-    s_wifi_ms = 180000UL;
-    s_wifi_lamp = 1;
+    s_wifi_lamp = 0;
     s_wifi_blink_ms = 0;
+    s_wifi_st = 0xFF;
     s_flash_on = 1;
     s_flash_ms = 0;
     s_suppress_pwr = 0;
@@ -482,6 +572,12 @@ void hmi_init(void)
     s_pwr_fault = 0;
     s_show_set_ms = 0;
     s_last_amb = 0xFF;
+    s_sleep = 0;
+    s_on_ms = 0;
+    s_on_min = 0;
+    s_usage_ms = 0;
+    s_wifi_rpt = 0;
+    apply_nvm();
     hmi_draw();
 }
 
@@ -506,9 +602,13 @@ void hmi_log_status(void)
     log_puts(" tmr=");
     log_u16((unsigned int)(s_timer_ms / 3600000UL));
     log_puts(" w=");
-    log_u16((unsigned int)s_wifi_on);
+    log_u16((unsigned int)s_wifi_st);
     log_puts(" sav=");
     log_u16((unsigned int)s_saver);
+    log_puts(" slp=");
+    log_u16((unsigned int)s_sleep);
+    log_puts(" use=");
+    log_u16((unsigned int)s_on_min);
     log_puts(" lost=");
     log_u16((unsigned int)s_pwr_lost);
     log_puts(" flt=");
@@ -540,6 +640,264 @@ unsigned char hmi_setpoint_c(void)
     return s_sp;
 }
 
+unsigned char hmi_setpoint_disp(void)
+{
+    return s_sp;
+}
+
+unsigned char hmi_unit_f(void)
+{
+    return s_unit_f;
+}
+
+unsigned char hmi_mode_tuya(void)
+{
+    if (s_mode == MODE_COOL)
+    {
+        return 2;
+    }
+    if (s_mode == MODE_DRY)
+    {
+        return 0;
+    }
+    if (s_mode == MODE_HEAT)
+    {
+        return 3;
+    }
+    return 1;
+}
+
+unsigned char hmi_sleep(void)
+{
+    return s_sleep;
+}
+
+unsigned char hmi_saver(void)
+{
+    return s_saver;
+}
+
+unsigned char hmi_usage_min(void)
+{
+    return s_on_min;
+}
+
+unsigned char hmi_fault_bits(void)
+{
+    if (s_pwr_fault == 6U)
+    {
+        return 0x01;
+    }
+    if (s_pwr_fault == 7U)
+    {
+        return 0x02;
+    }
+    return 0;
+}
+
+unsigned char hmi_wifi_take_rpt(void)
+{
+    unsigned char r;
+
+    r = s_wifi_rpt;
+    s_wifi_rpt = 0;
+    return r;
+}
+
+void hmi_wifi_set_power(unsigned char on)
+{
+    if (on != s_power)
+    {
+        set_power((unsigned char)((on != 0) ? 1 : 0));
+    }
+}
+
+void hmi_wifi_set_mode_tuya(unsigned char tuya_mode)
+{
+    unsigned char mode;
+
+    if (tuya_mode == 0)
+    {
+        mode = MODE_DRY;
+    }
+    else if (tuya_mode == 1)
+    {
+        mode = MODE_FAN;
+    }
+    else if (tuya_mode == 2)
+    {
+        mode = MODE_COOL;
+    }
+    else if (tuya_mode == 3)
+    {
+        mode = MODE_HEAT;
+    }
+    else
+    {
+        return;
+    }
+    if (mode == s_mode)
+    {
+        return;
+    }
+    if (s_mode == MODE_DRY)
+    {
+        s_fan = s_fan_saved;
+    }
+    if (mode == MODE_DRY)
+    {
+        s_fan_saved = s_fan;
+        s_fan = FAN_LOW;
+    }
+    s_mode = mode;
+    apply_dry_fan();
+    log_puts("HMI mode=");
+    log_u16((unsigned int)s_mode);
+    log_puts("\r\n");
+    s_dirty = 1;
+}
+
+void hmi_wifi_set_fan(unsigned char fan)
+{
+    if (fan > FAN_TURBO)
+    {
+        return;
+    }
+    if ((s_mode != MODE_DRY) && (fan != s_fan))
+    {
+        s_fan = fan;
+        s_fan_saved = fan;
+        log_puts("HMI fan=");
+        log_u16((unsigned int)s_fan);
+        log_puts("\r\n");
+        s_dirty = 1;
+    }
+    apply_dry_fan();
+}
+
+void hmi_wifi_set_temp_c(unsigned char c)
+{
+    unsigned char sp;
+
+    if (c < 16U)
+    {
+        c = 16;
+    }
+    if (c > 31U)
+    {
+        c = 31;
+    }
+    if (s_unit_f != 0)
+    {
+        sp = c_to_f(c);
+    }
+    else
+    {
+        sp = c;
+    }
+    if (sp != s_sp)
+    {
+        s_sp = sp;
+        log_puts("HMI ts=");
+        log_u16((unsigned int)s_sp);
+        if (s_unit_f != 0)
+        {
+            log_puts("F\r\n");
+        }
+        else
+        {
+            log_puts("C\r\n");
+        }
+        peek_setpoint();
+        mark_rpt(HMI_RPT_FULL);
+    }
+}
+
+void hmi_wifi_set_temp_f(unsigned char f)
+{
+    unsigned char sp;
+
+    if (f < 61U)
+    {
+        f = 61;
+    }
+    if (f > 88U)
+    {
+        f = 88;
+    }
+    if (s_unit_f != 0)
+    {
+        sp = f;
+    }
+    else
+    {
+        sp = f_to_c(f);
+    }
+    if (sp != s_sp)
+    {
+        s_sp = sp;
+        log_puts("HMI ts=");
+        log_u16((unsigned int)s_sp);
+        if (s_unit_f != 0)
+        {
+            log_puts("F\r\n");
+        }
+        else
+        {
+            log_puts("C\r\n");
+        }
+        peek_setpoint();
+        mark_rpt(HMI_RPT_FULL);
+    }
+}
+
+void hmi_wifi_set_unit(unsigned char unit_f)
+{
+    if (unit_f == s_unit_f)
+    {
+        return;
+    }
+    if (unit_f != 0)
+    {
+        s_sp = c_to_f(s_sp);
+        s_unit_f = 1;
+        log_hmi_tag("HMI unit=F");
+    }
+    else
+    {
+        s_sp = f_to_c(s_sp);
+        s_unit_f = 0;
+        log_hmi_tag("HMI unit=C");
+    }
+    s_dirty = 1;
+    mark_rpt(HMI_RPT_FULL);
+}
+
+void hmi_wifi_set_sleep(unsigned char on)
+{
+    on = (unsigned char)((on != 0) ? 1 : 0);
+    if (on != s_sleep)
+    {
+        s_sleep = on;
+        log_puts("HMI slp=");
+        log_u16((unsigned int)s_sleep);
+        log_puts("\r\n");
+    }
+}
+
+void hmi_wifi_set_saver(unsigned char on)
+{
+    on = (unsigned char)((on != 0) ? 1 : 0);
+    if (on != s_saver)
+    {
+        s_saver = on;
+        s_dirty = 1;
+        log_puts("HMI scr=");
+        log_u16((unsigned int)s_saver);
+        log_puts("\r\n");
+    }
+}
+
 void hmi_set_pwr_lost(unsigned char lost)
 {
     if (s_pwr_lost != lost)
@@ -555,19 +913,21 @@ void hmi_set_pwr_fault(unsigned char fault)
     {
         s_pwr_fault = fault;
         s_dirty = 1;
+        mark_rpt(HMI_RPT_FULL);
     }
 }
 
 void hmi_apply_ir(unsigned char power, unsigned char mode_ok, unsigned char mode,
                   unsigned char fan, unsigned char set_c, unsigned char f_plus,
-                  unsigned char unit_f, unsigned char tmr_op, unsigned char tmr_hours)
+                  unsigned char unit_f, unsigned char tmr_op, unsigned char tmr_hours,
+                  unsigned char sleep, unsigned char disp_on)
 {
     unsigned char sp;
     unsigned char was_on;
     unsigned char old_sp;
     unsigned char old_unit;
+    unsigned char saver;
 
-    hmi_wake();
     s_edit = 0;
     s_view = 0;
     was_on = s_power;
@@ -687,12 +1047,35 @@ void hmi_apply_ir(unsigned char power, unsigned char mode_ok, unsigned char mode
     {
         set_power(power);
     }
+
+    sleep = (unsigned char)((sleep != 0) ? 1 : 0);
+    if (sleep != s_sleep)
+    {
+        s_sleep = sleep;
+        log_puts("HMI slp=");
+        log_u16((unsigned int)s_sleep);
+        log_puts("\r\n");
+        s_dirty = 1;
+    }
+
+    saver = (unsigned char)((disp_on != 0) ? 0 : 1);
+    if (saver != s_saver)
+    {
+        s_saver = saver;
+        log_puts("HMI scr=");
+        log_u16((unsigned int)s_saver);
+        log_puts("\r\n");
+        s_dirty = 1;
+    }
+    mark_rpt(HMI_RPT_FULL);
 }
 
 void hmi_poll(void)
 {
     unsigned char i;
     unsigned char e;
+    unsigned char st;
+    unsigned int blink;
 
     for (i = 0; i < KEY_N; i++)
     {
@@ -743,6 +1126,7 @@ void hmi_poll(void)
         {
             s_last_amb = ntc_c();
             s_dirty = 1;
+            mark_rpt(HMI_RPT_TEMP);
         }
     }
 
@@ -789,25 +1173,69 @@ void hmi_poll(void)
         }
     }
 
-    if (s_wifi_on != 0)
+    if (s_power != 0)
     {
-        if (s_wifi_ms != 0)
+        s_on_ms++;
+        if (s_on_ms >= 60000UL)
         {
-            s_wifi_ms--;
+            s_on_ms = 0;
+            if (s_on_min < 30U)
+            {
+                s_on_min++;
+            }
         }
-        s_wifi_blink_ms++;
-        if (s_wifi_blink_ms >= 250U)
+        s_usage_ms++;
+        if (s_usage_ms >= 1800000UL)
         {
+            s_usage_ms = 0;
+            mark_rpt(HMI_RPT_USAGE);
+            log_puts("HMI use=");
+            log_u16((unsigned int)s_on_min);
+            log_puts("\r\n");
+        }
+    }
+
+    st = tuya_link_wifi_state();
+        if (st != s_wifi_st)
+        {
+            s_wifi_st = st;
             s_wifi_blink_ms = 0;
-            s_wifi_lamp = (unsigned char)(s_wifi_lamp == 0);
             s_dirty = 1;
         }
-        if (s_wifi_ms == 0)
+        if ((st == 0) || (st == 6U))
         {
-            s_wifi_on = 0;
-            s_wifi_lamp = 0;
-            s_dirty = 1;
+            blink = 250U;
         }
+        else if (st == 1U)
+        {
+            blink = 1500U;
+        }
+        else
+        {
+            blink = 0;
+        }
+        if (blink != 0)
+        {
+            s_wifi_blink_ms++;
+            if (s_wifi_blink_ms >= blink)
+            {
+                s_wifi_blink_ms = 0;
+                s_wifi_lamp = (unsigned char)(s_wifi_lamp == 0);
+                s_dirty = 1;
+            }
+        }
+        else if ((st == 3U) || (st == 4U))
+        {
+            if (s_wifi_lamp == 0)
+            {
+                s_wifi_lamp = 1;
+                s_dirty = 1;
+            }
+        }
+    else if (s_wifi_lamp != 0)
+    {
+        s_wifi_lamp = 0;
+        s_dirty = 1;
     }
 
     s_draw_ms++;
@@ -817,4 +1245,7 @@ void hmi_poll(void)
         s_dirty = 0;
         hmi_draw();
     }
+
+    fill_nvm();
+    nvm_poll(&s_nvm);
 }

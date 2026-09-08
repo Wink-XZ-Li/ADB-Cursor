@@ -12,6 +12,7 @@ static unsigned char xdata s_last_d;
 static unsigned char xdata s_last_e;
 static unsigned char xdata s_last_i6;
 static unsigned char xdata s_last_i7;
+static unsigned char xdata s_last_f3;
 static unsigned char xdata s_have_last;
 
 static unsigned char bitrev8(unsigned char v)
@@ -52,7 +53,7 @@ static void log_unsupported(unsigned char *b)
     e = b[5];
     f = b[6];
     g = b[7];
-    if (((c & 0x01U) != 0) || ((e & 0x3FU) != 0) || ((f & 0xEFU) != 0) || ((g & 0x7FU) != 0))
+    if (((c & 0x01U) != 0) || ((e & 0x3BU) != 0) || ((f & 0xE7U) != 0) || ((g & 0x7FU) != 0))
     {
         log_puts("IR extra C=");
         log_hex8(c);
@@ -96,6 +97,9 @@ void ir_link_poll(void)
     unsigned char tmr_h;
     unsigned char on_h;
     unsigned char off_h;
+    unsigned char f;
+    unsigned char sleep;
+    unsigned char disp_on;
 
     if (ir_rx_take(s_buf) == 0)
     {
@@ -133,6 +137,7 @@ void ir_link_poll(void)
     a = s_buf[1];
     d = s_buf[4];
     e = s_buf[5];
+    f = s_buf[6];
     h = s_buf[8];
     ii = s_buf[9];
     j = s_buf[10];
@@ -140,9 +145,11 @@ void ir_link_poll(void)
 
     f_plus = (unsigned char)((ii >> 6) & 0x01U);
     unit_f = (unsigned char)((ii >> 7) & 0x01U);
+    sleep = (unsigned char)((f >> 3) & 0x01U);
+    disp_on = (unsigned char)((e >> 2) & 0x01U);
 
     if ((s_have_last != 0) && (a == s_last_a) && (d == s_last_d) && (e == s_last_e)
-        && (f_plus == s_last_i6) && (unit_f == s_last_i7))
+        && (f_plus == s_last_i6) && (unit_f == s_last_i7) && (sleep == s_last_f3))
     {
         return;
     }
@@ -151,6 +158,7 @@ void ir_link_poll(void)
     s_last_e = e;
     s_last_i6 = f_plus;
     s_last_i7 = unit_f;
+    s_last_f3 = sleep;
     s_have_last = 1;
 
     power = (unsigned char)(((e & 0xC0U) == 0) ? 1 : 0);
@@ -298,5 +306,6 @@ void ir_link_poll(void)
 
     log_unsupported(s_buf);
 
-    hmi_apply_ir(power, mode_ok, mode, fan, set_c, f_plus, unit_f, tmr_op, tmr_h);
+    hmi_apply_ir(power, mode_ok, mode, fan, set_c, f_plus, unit_f, tmr_op, tmr_h,
+                 sleep, disp_on);
 }

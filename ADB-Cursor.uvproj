@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage3</OutputName>
+          <OutputName>Stage4C</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -436,6 +436,26 @@
               <FileName>ntc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\bsp\ntc.c</FilePath>
+            </File>
+            <File>
+              <FileName>wifi_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\wifi_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>tuya_link.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\tuya_link.c</FilePath>
+            </File>
+            <File>
+              <FileName>eeprom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\eeprom.c</FilePath>
+            </File>
+            <File>
+              <FileName>nvm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\nvm.c</FilePath>
             </File>
             <File>
               <FileName>TKDriver.C</FileName>

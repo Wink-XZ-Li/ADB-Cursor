@@ -8,6 +8,8 @@
 #include "pwr_link.h"
 #include "ir_link.h"
 #include "ntc.h"
+#include "tuya_link.h"
+#include "wifi_uart.h"
 
 void board_wdt_feed(void)
 {
@@ -17,6 +19,7 @@ void board_wdt_feed(void)
 void board_init(void)
 {
     SC95F8763_NIO_Init();
+    wifi_uart_power();
 
     timebase_init();
     log_uart_init();
@@ -28,6 +31,7 @@ void board_init(void)
     pwr_link_init();
     ir_link_init();
     ntc_init();
+    tuya_link_init();
     EA = 1;
     board_wdt_feed();
 }
@@ -46,6 +50,7 @@ void main(void)
         ir_link_poll();
         ntc_poll();
         hmi_poll();
+        tuya_link_poll();
         pwr_link_poll();
     }
 }

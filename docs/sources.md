@@ -23,8 +23,8 @@
 | HY-6007逻辑图__（改）(3).pdf | 44300 | 指示灯条外形，阶段 1A 再用。 |
 | C5337152_...TM1640...PDF | 1363837 | 未读。阶段 1A。 |
 | 内外机通信协议_260209-终.docx | 28084 | 阶段 2：已提取帧格式（`66 99` / `55 5A`、4800 8N1）。未读旧工程协议代码。 |
-| protocol_uforlynlgj5xx3zg_20260803.pdf | 146763 | 未读。阶段 4。 |
-| mcu_sdk_FOGATTI...20260803.zip | 55707 | 未读。阶段 4。 |
+| protocol_uforlynlgj5xx3zg_20260803.pdf | 146763 | 阶段 4：PID `uforlynlgj5xx3zg`、9600、DP 1/2/3/4/5/19/22/23/24/25/120/150。未读旧工程。 |
+| mcu_sdk_FOGATTI...20260803.zip | 55707 | 阶段 4：官方 MCU_SDK v2.6.2。已复制 `mcu_sdk/` 到 `firmware/third_party/tuya_mcu/`。C51 只编译自写 `tuya_link.c`（官方协议子集），不链 `protocol.c`。 |
 | 红外遥控器协议.doc | 233472 | 阶段 3：载波 38 kHz、系统码 `0x56`、120 bit、A–N。模式位按表（001 热 / 010 冷）。未读旧工程红外代码。 |
 
 ## 官方芯片与工具链
@@ -44,7 +44,7 @@
 | SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 已登记，阶段 -1 不改 Option、不用其改芯片配置 | 官方烧录工具存在 |
 | 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` | 编译、烧录、串口。已检查：显式工程路径，不读取范围外工程 | 不引入旧产品代码 |
 
-未使用：`sc95-ota-dual-zone` skill、涂鸦 SDK、旧 ADB 除 Sense_Lib 外的源码 / test2 / Boot 工程。
+未使用：`sc95-ota-dual-zone` skill、旧 ADB 除 Sense_Lib 外的源码 / test2 / Boot 工程。涂鸦只用来自授权 zip 的 MCU_SDK 头文件与 DP/PID，未读旧工程 `protocol.c`。
 
 ## Sense_Lib 复制（阶段 1B，授权例外）
 

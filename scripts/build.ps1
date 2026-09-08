@@ -52,6 +52,10 @@ Invoke-C51 "firmware\app\pwr_link.c" "pwr_link"
 Invoke-C51 "firmware\bsp\ir_rx.c" "ir_rx"
 Invoke-C51 "firmware\app\ir_link.c" "ir_link"
 Invoke-C51 "firmware\bsp\ntc.c" "ntc"
+Invoke-C51 "firmware\bsp\wifi_uart.c" "wifi_uart"
+Invoke-C51 "firmware\app\tuya_link.c" "tuya_link"
+Invoke-C51 "firmware\bsp\eeprom.c" "eeprom"
+Invoke-C51 "firmware\app\nvm.c" "nvm"
 Invoke-C51 "firmware\third_party\sense_lib\TKDriver.C" "TKDriver"
 
 Copy-Item -LiteralPath "firmware\third_party\sense_lib\SC95F8X6X_HighSensitive.LIB" -Destination (Join-Path $Build "touch.lib") -Force
@@ -72,9 +76,14 @@ build\pwr_link.obj,
 build\ir_rx.obj,
 build\ir_link.obj,
 build\ntc.obj,
+build\wifi_uart.obj,
+build\tuya_link.obj,
+build\eeprom.obj,
+build\nvm.obj,
 build\TKDriver.obj,
 build\touch.lib
-TO build\Stage3
+TO build\Stage4C
+PRINT (build\Stage4C.MAP)
 CLASSES (CODE (C:0x0080-C:0xFFFF))
 "@ | Set-Content -LiteralPath $lnp -Encoding ascii
 
@@ -85,12 +94,12 @@ if ($LASTEXITCODE -gt 1) {
 }
 
 Write-Host "+ OHX51"
-& "$C51Bin\Ohx51.exe" "build\Stage3" "HEXFILE(build\Stage3.hex)"
+& "$C51Bin\Ohx51.exe" "build\Stage4C" "HEXFILE(build\Stage4C.hex)"
 Assert-LastExit "OHX51"
 
-$hex = Join-Path $Build "Stage3.hex"
+$hex = Join-Path $Build "Stage4C.hex"
 $h = Get-FileHash -LiteralPath $hex -Algorithm SHA256
-Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage3.hex") -Force
+Copy-Item -LiteralPath $hex -Destination (Join-Path $Rel "Stage4C.hex") -Force
 Write-Host "HEX $hex"
 Write-Host "SHA256 $($h.Hash)"
 Write-Host "SIZE $((Get-Item -LiteralPath $hex).Length)"

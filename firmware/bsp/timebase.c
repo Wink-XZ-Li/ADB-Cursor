@@ -1,6 +1,7 @@
 #include "board.h"
 #include "timebase.h"
 #include "pwr_uart.h"
+#include "wifi_uart.h"
 
 /*
  * Timer0 mode 1, clock = Fsys (TMCON.0).
@@ -30,6 +31,7 @@ void delay_ms(unsigned int ms)
         while (TF0 == 0)
         {
             pwr_uart_poll_rx();
+            wifi_uart_poll_rx();
             board_wdt_feed();
         }
         TR0 = 0;
