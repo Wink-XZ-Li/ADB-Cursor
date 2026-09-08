@@ -45,7 +45,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\build\</OutputDirectory>
-          <OutputName>Stage2</OutputName>
+          <OutputName>Stage3</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -421,6 +421,21 @@
               <FileName>pwr_link.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\firmware\app\pwr_link.c</FilePath>
+            </File>
+            <File>
+              <FileName>ir_rx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\ir_rx.c</FilePath>
+            </File>
+            <File>
+              <FileName>ir_link.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\app\ir_link.c</FilePath>
+            </File>
+            <File>
+              <FileName>ntc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firmware\bsp\ntc.c</FilePath>
             </File>
             <File>
               <FileName>TKDriver.C</FileName>

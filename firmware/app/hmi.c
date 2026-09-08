@@ -3,6 +3,7 @@
 #include "keys.h"
 #include "disp_ui.h"
 #include "log_uart.h"
+#include "ntc.h"
 
 #define MODE_COOL  0
 #define MODE_DRY   1
@@ -32,7 +33,8 @@ static unsigned char xdata s_suppress_pwr;
 static unsigned char xdata s_dirty;
 static unsigned char xdata s_pwr_lost;
 static unsigned char xdata s_pwr_fault;
-static unsigned int xdata s_idle_ms;
+static unsigned char xdata s_last_amb;
+static unsigned int xdata s_show_set_ms;
 static unsigned int xdata s_edit_ms;
 static unsigned int xdata s_view_ms;
 static unsigned int xdata s_flash_ms;
@@ -46,7 +48,7 @@ static unsigned char code s_mode_next[4] = {MODE_DRY, MODE_FAN, MODE_COOL, MODE_
 static unsigned char c_to_f(unsigned char c)
 {
     unsigned int f;
-    f = ((unsigned int)c * 9U) / 5U + 32U;
+    f = ((unsigned int)c * 9U + 2U) / 5U + 32U;
     if (f < 61U)
     {
         f = 61U;
@@ -77,9 +79,34 @@ static unsigned char f_to_c(unsigned char f)
     return (unsigned char)c;
 }
 
+static void peek_setpoint(void)
+{
+    s_show_set_ms = 2000U;
+    s_dirty = 1;
+}
+
+static unsigned char amb_display(void)
+{
+    unsigned int f;
+
+    if (s_unit_f == 0)
+    {
+        if (ntc_c() > 99U)
+        {
+            return 99;
+        }
+        return ntc_c();
+    }
+    f = ((unsigned int)ntc_c() * 9U + 2U) / 5U + 32U;
+    if (f > 99U)
+    {
+        f = 99U;
+    }
+    return (unsigned char)f;
+}
+
 static void hmi_wake(void)
 {
-    s_idle_ms = 0;
     if (s_saver != 0)
     {
         s_saver = 0;
@@ -107,7 +134,7 @@ static void set_power(unsigned char on)
     s_edit = 0;
     s_view = 0;
     s_saver = 0;
-    s_idle_ms = 0;
+    s_show_set_ms = 0;
     if (on != 0)
     {
         apply_dry_fan();
@@ -122,6 +149,9 @@ static void set_power(unsigned char on)
 
 static void adj_temp(unsigned char up)
 {
+    unsigned char old;
+
+    old = s_sp;
     if (s_unit_f != 0)
     {
         if ((up != 0) && (s_sp < 88U))
@@ -144,6 +174,10 @@ static void adj_temp(unsigned char up)
             s_sp--;
         }
     }
+    if (s_sp == old)
+    {
+        return;
+    }
     log_puts("HMI ts=");
     log_u16((unsigned int)s_sp);
     if (s_unit_f != 0)
@@ -154,7 +188,7 @@ static void adj_temp(unsigned char up)
     {
         log_puts("C\r\n");
     }
-    s_dirty = 1;
+    peek_setpoint();
 }
 
 static void adj_hours(unsigned char up)
@@ -376,8 +410,6 @@ static void hmi_draw(void)
     }
     else if (s_power != 0)
     {
-        show_num = 1;
-        num = s_sp;
         if (s_pwr_lost == 0)
         {
             if (s_pwr_fault == 6U)
@@ -388,6 +420,24 @@ static void hmi_draw(void)
             {
                 overlay = DISP_OV_E2;
             }
+        }
+        if ((overlay == DISP_OV_E1) || (overlay == DISP_OV_E2))
+        {
+            show_num = 0;
+        }
+        else if (s_show_set_ms != 0)
+        {
+            show_num = 1;
+            num = s_sp;
+        }
+        else if (ntc_ready() != 0)
+        {
+            show_num = 1;
+            num = amb_display();
+        }
+        else
+        {
+            show_num = 0;
         }
     }
 
@@ -424,13 +474,14 @@ void hmi_init(void)
     s_flash_on = 1;
     s_flash_ms = 0;
     s_suppress_pwr = 0;
-    s_idle_ms = 0;
     s_edit_ms = 0;
     s_view_ms = 0;
     s_draw_ms = 0;
     s_dirty = 1;
     s_pwr_lost = 0;
     s_pwr_fault = 0;
+    s_show_set_ms = 0;
+    s_last_amb = 0xFF;
     hmi_draw();
 }
 
@@ -507,6 +558,137 @@ void hmi_set_pwr_fault(unsigned char fault)
     }
 }
 
+void hmi_apply_ir(unsigned char power, unsigned char mode_ok, unsigned char mode,
+                  unsigned char fan, unsigned char set_c, unsigned char f_plus,
+                  unsigned char unit_f, unsigned char tmr_op, unsigned char tmr_hours)
+{
+    unsigned char sp;
+    unsigned char was_on;
+    unsigned char old_sp;
+    unsigned char old_unit;
+
+    hmi_wake();
+    s_edit = 0;
+    s_view = 0;
+    was_on = s_power;
+    old_sp = s_sp;
+    old_unit = s_unit_f;
+
+    if (unit_f != s_unit_f)
+    {
+        s_unit_f = unit_f;
+        if (s_unit_f != 0)
+        {
+            log_hmi_tag("HMI unit=F");
+        }
+        else
+        {
+            log_hmi_tag("HMI unit=C");
+        }
+        s_dirty = 1;
+    }
+
+    if (s_unit_f != 0)
+    {
+        sp = c_to_f(set_c);
+        if (f_plus != 0)
+        {
+            if (sp < 88U)
+            {
+                sp++;
+            }
+        }
+    }
+    else
+    {
+        sp = set_c;
+        if (sp < 16U)
+        {
+            sp = 16;
+        }
+        if (sp > 31U)
+        {
+            sp = 31;
+        }
+    }
+    if (sp != s_sp)
+    {
+        s_sp = sp;
+        log_puts("HMI ts=");
+        log_u16((unsigned int)s_sp);
+        if (s_unit_f != 0)
+        {
+            log_puts("F\r\n");
+        }
+        else
+        {
+            log_puts("C\r\n");
+        }
+        s_dirty = 1;
+    }
+
+    if ((was_on != 0) && ((s_sp != old_sp) || (s_unit_f != old_unit)))
+    {
+        peek_setpoint();
+    }
+
+    if ((mode_ok != 0) && (mode != s_mode))
+    {
+        if (s_mode == MODE_DRY)
+        {
+            s_fan = s_fan_saved;
+        }
+        if (mode == MODE_DRY)
+        {
+            s_fan_saved = s_fan;
+            s_fan = FAN_LOW;
+        }
+        s_mode = mode;
+        log_puts("HMI mode=");
+        log_u16((unsigned int)s_mode);
+        log_puts("\r\n");
+        s_dirty = 1;
+    }
+
+    if ((fan <= FAN_HIGH) && (s_mode != MODE_DRY))
+    {
+        if (fan != s_fan)
+        {
+            s_fan = fan;
+            s_fan_saved = fan;
+            log_puts("HMI fan=");
+            log_u16((unsigned int)s_fan);
+            log_puts("\r\n");
+            s_dirty = 1;
+        }
+    }
+    apply_dry_fan();
+
+    if (tmr_op == 3U)
+    {
+        if (s_timer_ms != 0)
+        {
+            s_timer_ms = 0;
+            log_hmi_tag("HMI tmr=0");
+            s_dirty = 1;
+        }
+    }
+    else if ((tmr_op == 1U) || (tmr_op == 2U))
+    {
+        s_timer_ms = (unsigned long)tmr_hours * 3600000UL;
+        s_timer_off = (unsigned char)((tmr_op == 1U) ? 1 : 0);
+        log_puts("HMI tmr=");
+        log_u16((unsigned int)tmr_hours);
+        log_puts("h\r\n");
+        s_dirty = 1;
+    }
+
+    if (power != s_power)
+    {
+        set_power(power);
+    }
+}
+
 void hmi_poll(void)
 {
     unsigned char i;
@@ -546,15 +728,20 @@ void hmi_poll(void)
         }
     }
 
-    if ((s_power != 0) && (s_edit == 0) && (s_view == 0) && (s_saver == 0))
+    if (s_show_set_ms != 0)
     {
-        if (s_idle_ms < 15000U)
+        s_show_set_ms--;
+        if (s_show_set_ms == 0)
         {
-            s_idle_ms++;
+            s_dirty = 1;
         }
-        else
+    }
+
+    if (ntc_ready() != 0)
+    {
+        if (ntc_c() != s_last_amb)
         {
-            s_saver = 1;
+            s_last_amb = ntc_c();
             s_dirty = 1;
         }
     }

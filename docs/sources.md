@@ -17,14 +17,15 @@
 | 文件 | 大小 | 阶段 -1 用途 |
 | --- | --- | --- |
 | 房车空调ADB电控规格书更新Wi-Fi部分5月25号.doc | 585728 | 未成功提取正文（Word COM 失败）。未扩大读取范围。 |
-| ORBEK-LK-GLADB-D V1.0(1)(1) (1).pdf | 175986 | 原理图。无文字层，仅渲染核对。 |
+| ORBEK-LK-GLADB-D V1.0(1)(1) (1).pdf | 175986 | 原理图。无文字层。 |
+| ORBEK-LK-GLADB-D V1.0(1).PcbDoc | 1826304 | 阶段 3：OLE 解析确认 `P_REC`→U8 pin12。未读旧工程。 |
 | HY-3129-1.pdf | 50952 | 数码管外形，阶段 1A 再用。 |
 | HY-6007逻辑图__（改）(3).pdf | 44300 | 指示灯条外形，阶段 1A 再用。 |
 | C5337152_...TM1640...PDF | 1363837 | 未读。阶段 1A。 |
 | 内外机通信协议_260209-终.docx | 28084 | 阶段 2：已提取帧格式（`66 99` / `55 5A`、4800 8N1）。未读旧工程协议代码。 |
 | protocol_uforlynlgj5xx3zg_20260803.pdf | 146763 | 未读。阶段 4。 |
 | mcu_sdk_FOGATTI...20260803.zip | 55707 | 未读。阶段 4。 |
-| 红外遥控器协议.doc | 233472 | 阶段 3 冻结：已提取载波 38 kHz、系统码 `0x56`、120 bit、A–N 字段。未读旧工程红外代码。 |
+| 红外遥控器协议.doc | 233472 | 阶段 3：载波 38 kHz、系统码 `0x56`、120 bit、A–N。模式位按表（001 热 / 010 冷）。未读旧工程红外代码。 |
 
 ## 官方芯片与工具链
 
@@ -38,6 +39,8 @@
 | 数据手册 英文 | [v0.1en](https://socmcu.com/upfile/SC95F8767_8766_8765_8763_8762v0.1en%20.pdf)，SHA256 `ED453C4ECF29AEFD9034A61BF6C977465212CA7F6067D51E76F32B93D551BD27` | 同上 | 官方手册 |
 | 应用指南 | 赛元 SC95F 系列 MCU 应用指南 V1.8 / V2.0（官网） | USCI TI/RI 写1清0、TX 上拉 | 只取 UART 注意项，未下载同类产品工程 |
 | 官方 Demo USCIX_Init.c | 同上 Demo 目录 | 阶段 2：USCI2 UART 的 P4.4/P4.5、`USXINX=2`、`TMCON|=0xC0`、`IE2|=0x02`、interrupt 16 | 未复制 Demo 工程或业务 |
+| 官方 Demo ADC_Init.c | 8763 Demo | 阶段 3：`ADCCON`/`ADCCFG`/`ADCVH`/`ADCVL`、启动位与 12 位拼法 | 轮询 EOC，不使能中断 6；未复制平均/中断业务 |
+| 用户粘贴 10K NTC 表 | 对话 2026-09-08 | `c_AD_TO_TEMPER_10K_TABLE` 下标 0–72℃ | 未打开旧工程取表；0.1.3 按 `adc>>4` 查 |
 | SOC Programming Tool | `D:\SOC Programming Tool` 及 Enhance | 已登记，阶段 -1 不改 Option、不用其改芯片配置 | 官方烧录工具存在 |
 | 通用 skill | `build-keil` / `flash-keil` / `serial-monitor` / `workflow` | 编译、烧录、串口。已检查：显式工程路径，不读取范围外工程 | 不引入旧产品代码 |
 

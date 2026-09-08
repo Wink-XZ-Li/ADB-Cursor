@@ -6,6 +6,8 @@
 #include "keys.h"
 #include "hmi.h"
 #include "pwr_link.h"
+#include "ir_link.h"
+#include "ntc.h"
 
 void board_wdt_feed(void)
 {
@@ -24,6 +26,8 @@ void board_init(void)
     keys_init();
     hmi_init();
     pwr_link_init();
+    ir_link_init();
+    ntc_init();
     EA = 1;
     board_wdt_feed();
 }
@@ -39,6 +43,8 @@ void main(void)
     {
         delay_ms(1);
         keys_poll();
+        ir_link_poll();
+        ntc_poll();
         hmi_poll();
         pwr_link_poll();
     }

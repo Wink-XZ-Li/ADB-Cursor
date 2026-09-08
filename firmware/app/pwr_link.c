@@ -2,13 +2,15 @@
 #include "pwr_link.h"
 #include "pwr_uart.h"
 #include "hmi.h"
+#include "ntc.h"
 #include "log_uart.h"
 
 /*
  * Indoor→outdoor 21-byte 66 99 and outdoor→indoor 33-byte 55 5A
  * from the authorized protocol extract (not old ADB source).
  * Send period 150 ms. Lost after 5 s without a valid 55 5A frame.
- * Byte3 current temp: no indoor NTC, send setpoint (logged cur=set).
+ * Byte3: indoor NTC °C+40 once ntc_ready(); until then Byte3 = setpoint
+ * (logged cur=set). Open/short keep last valid.
  */
 
 #define PWR_TX_N      21
@@ -32,6 +34,7 @@ static unsigned char xdata s_have_rx;
 static unsigned char xdata s_last_tx4;
 static unsigned char xdata s_last_tx5;
 static unsigned char xdata s_last_tx2;
+static unsigned char xdata s_last_tx3;
 static unsigned char xdata s_last_ver;
 static unsigned char xdata s_last_type;
 static unsigned char xdata s_last_fault_log;
@@ -75,7 +78,14 @@ static void log_tx_frame(void)
     }
     log_puts(" sum=");
     log_hex8(s_tx[20]);
-    log_puts(" cur=set\r\n");
+    if (ntc_ready() != 0)
+    {
+        log_puts(" cur=ntc\r\n");
+    }
+    else
+    {
+        log_puts(" cur=set\r\n");
+    }
 }
 
 static void build_tx(void)
@@ -98,7 +108,14 @@ static void build_tx(void)
     s_tx[0] = 0x66;
     s_tx[1] = 0x99;
     s_tx[2] = (unsigned char)(set_c + 40U);
-    s_tx[3] = s_tx[2];
+    if (ntc_ready() != 0)
+    {
+        s_tx[3] = (unsigned char)(ntc_c() + 40U);
+    }
+    else
+    {
+        s_tx[3] = s_tx[2];
+    }
     s_tx[4] = (unsigned char)((proto_fan(power, fan) << 4) | s_mode_tx[mode]);
     s_tx[5] = (unsigned char)(power & 0x01);
     for (i = 6; i < 20U; i++)
@@ -120,10 +137,12 @@ static void send_tx(void)
     }
 
     changed = 0;
-    if ((s_tx[2] != s_last_tx2) || (s_tx[4] != s_last_tx4) || (s_tx[5] != s_last_tx5))
+    if ((s_tx[2] != s_last_tx2) || (s_tx[3] != s_last_tx3)
+        || (s_tx[4] != s_last_tx4) || (s_tx[5] != s_last_tx5))
     {
         changed = 1;
         s_last_tx2 = s_tx[2];
+        s_last_tx3 = s_tx[3];
         s_last_tx4 = s_tx[4];
         s_last_tx5 = s_tx[5];
     }
@@ -253,6 +272,7 @@ void pwr_link_init(void)
     s_fault = 0;
     s_have_rx = 0;
     s_last_tx2 = 0xFF;
+    s_last_tx3 = 0xFF;
     s_last_tx4 = 0xFF;
     s_last_tx5 = 0xFF;
     s_last_ver = 0xFF;
@@ -261,7 +281,7 @@ void pwr_link_init(void)
     s_tx_ms = 0;
     s_lost_ms = 0;
     pwr_uart_init();
-    log_puts("PWR USCI2 4800 P4.4/P4.5 period=150ms cur=set no NTC\r\n");
+    log_puts("PWR USCI2 4800 P4.4/P4.5 period=150ms cur=set until NTC\r\n");
     send_tx();
 }
 
