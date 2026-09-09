@@ -5,6 +5,7 @@
 当前阶段：**5 已通过**（资源、回归、交付）。交付固件为已验收 **`STAGE-4B-0.1.0`**。文档 `STAGE-5-0.1.0`。
 
 - 交付报告：`docs/delivery.md`
+- 教学案例（浏览器打开即可）：`docs/case-ai-embedded-adb.html`
 - 运行时架构：`docs/architecture/adb-runtime.html`
 - 阶段计划：`docs/stage-plan.md`
 - 资料与复用：`docs/sources.md`
